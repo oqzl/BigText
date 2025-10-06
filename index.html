@@ -42,7 +42,7 @@
       position: fixed;
       left: 0;
       right: 0;
-      top: 0;
+      top: env(safe-area-inset-top);
       height: 64px;
       display: flex;
       align-items: center;
@@ -83,7 +83,10 @@
 
     main {
       position: fixed;
-      inset: 64px 0 0 0;
+      top: calc(env(safe-area-inset-top) + 64px);
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: var(--bg);
       display: flex;
       align-items: center;
@@ -125,7 +128,7 @@
       }
 
       main {
-        inset: 72px 0 0 0
+        top: calc(env(safe-area-inset-top) + 72px);
       }
 
       textarea#input {
@@ -336,6 +339,8 @@
       _canvas.removeEventListener('click', _onCanvasClickToEdit);
       _btnSpeak.style.display = 'none';
       if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = '読み上げ'; }
+      // Clear canvas in edit mode
+      _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
     }
     function _onCanvasClickToEdit() { _enterEdit(); }
 
@@ -372,8 +377,23 @@
         _canvas.style.height = mainRect.height + 'px';
         _resizeCanvas();
       }
+      
+      // Visual Viewport API for iOS keyboard handling
+      function _handleVisualViewportChange() {
+        if (_mode === 'view') {
+          _fitCanvasToParent();
+          _drawText();
+        }
+      }
+      
       window.addEventListener('load', _fitCanvasToParent);
       window.addEventListener('resize', _fitCanvasToParent);
+      
+      // Add visual viewport support for iOS keyboard
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', _handleVisualViewportChange);
+      }
+      
       _fitCanvasToParent();
       _enterEdit();
       _runSelfTests();
