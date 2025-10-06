@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Canvas 大文字表示デモ v5</title>
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --ui: #0f1720;
+      --fg: #fff;
+      --muted: #9aa4b2
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
+      background: var(--bg);
+      color: var(--fg)
+    }
+
+    .topbar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+      box-sizing: border-box;
+      z-index: 20
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex: 1
+    }
+
+    textarea#input {
+      flex: 1;
+      min-height: 48px;
+      max-height: 160px;
+      border-radius: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--fg);
+      resize: vertical;
+      font-size: 16px
+    }
+
+    button {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 14px
+    }
+
+    main {
+      position: fixed;
+      inset: 64px 0 0 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      height: 100%;
+    }
+
+    .hint {
+      position: fixed;
+      left: 12px;
+      bottom: 12px;
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .speak {
+      position: fixed;
+      right: 12px;
+      bottom: 76px;
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #e5e7eb;
+      padding: 10px 12px;
+      border-radius: 9999px;
+      font-size: 14px;
+      backdrop-filter: blur(4px);
+      display: none;
+      z-index: 25
+    }
+
+    @media (max-width:420px) {
+      .topbar {
+        height: 72px
+      }
+
+      main {
+        inset: 72px 0 0 0
+      }
+
+      textarea#input {
+        font-size: 15px
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="topbar">
+    <div class="controls">
+      <textarea id="input" placeholder="ここに表示したい文字を入力（改行可）">こんにちは
+二行目です</textarea>
+    </div>
+    <button id="btnView">表示</button>
+    <button id="btnSave">PNG保存</button>
+  </div>
+  <main>
+    <canvas id="canvas"></canvas>
+  </main>
+  <button id="btnSpeak" class="speak" title="読み上げ">読み上げ</button>
+  <div class="hint">タップで編集に戻る。画面回転に対応。コンソールにセルフテスト結果を出力。</div>
+
+  <script>
+    /* 実用重視。プライベート関数は先頭にアンダースコア */
+    const _canvas = document.getElementById('canvas');
+    const _ctx = _canvas.getContext('2d');
+    const _input = document.getElementById('input');
+    const _btnView = document.getElementById('btnView');
+    const _btnSave = document.getElementById('btnSave');
+    const _btnSpeak = document.getElementById('btnSpeak');
+
+    let _mode = 'edit'; // 'edit' or 'view'
+    let _lastText = _input.value || '';
+    let _devicePixelRatio = Math.max(window.devicePixelRatio || 1, 1);
+    const _padding = 24; // canvas 内余白
+    const _lineHeightRatioBase = 1.02; // 単一行の行間比
+    const _lineHeightRatioMulti = 1.18; // 複数行時に少し広げる
+    const _fontFamily = 'sans-serif';
+
+    /* キャンバスリサイズ（高DPI対応） */
+    function _resizeCanvas() {
+      const rect = _canvas.getBoundingClientRect();
+      const w = Math.max(1, Math.floor(rect.width * _devicePixelRatio));
+      const h = Math.max(1, Math.floor(rect.height * _devicePixelRatio));
+      if (_canvas.width !== w || _canvas.height !== h) {
+        _canvas.width = w; _canvas.height = h;
+        _ctx.setTransform(_devicePixelRatio, 0, 0, _devicePixelRatio, 0, 0);
+      }
+    }
+
+    /* テキスト行に分割（改行コードを正規化してから '\n' で分割）。空行はスペース1つに */
+    function _toLines(text) {
+      if (typeof text !== 'string') return [' '];
+      const normalized = text.replace(/\r\n?|\u2028|\u2029/g, '\n'); // CRLF/CR/LS/PS → \n
+      return normalized.split('\n').map(l => l === '' ? ' ' : l);
+    }
+
+    /* 指定フォントサイズでテキストが収まるか判定 */
+    function _fits(fontSize, lines, cw, ch) {
+      _ctx.font = `${fontSize}px ${_fontFamily}`;
+      const maxW = cw - _padding * 2;
+      for (let line of lines) {
+        const m = _ctx.measureText(line);
+        if (m.width > maxW + 1) return false;
+      }
+      let ascent = 0, descent = 0;
+      try {
+        const m = _ctx.measureText(lines[0] || 'M');
+        ascent = m.actualBoundingBoxAscent || fontSize * 0.8;
+        descent = m.actualBoundingBoxDescent || fontSize * 0.2;
+      } catch (e) { ascent = fontSize * 0.8; descent = fontSize * 0.2; }
+      const lineHeightRatio = (lines.length > 1) ? _lineHeightRatioMulti : _lineHeightRatioBase;
+      const lineH = (ascent + descent) * lineHeightRatio;
+      const totalH = lineH * lines.length;
+      return totalH <= (ch - _padding * 2) + 1;
+    }
+
+    /* 最大フォントサイズを二分探索で求める */
+    function _computeMaxFontSize(lines, cw, ch) {
+      if (!lines || lines.length === 0) return 16;
+      let low = 4, high = 4000;
+      if (lines.join('\n').trim() === '') return 48; // 空白のみ
+      for (let i = 0; i < 40; i++) {
+        const mid = Math.floor((low + high) / 2);
+        if (_fits(mid, lines, cw, ch)) low = mid; else high = mid;
+        if (high - low <= 1) break;
+      }
+      return low;
+    }
+
+    /* キャンバスにテキストを描画 */
+    function _drawText() {
+      _resizeCanvas();
+      const rect = _canvas.getBoundingClientRect();
+      const cw = rect.width, ch = rect.height;
+      const lines = _toLines(_lastText);
+      const size = _computeMaxFontSize(lines, cw, ch);
+      _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
+      const g = _ctx.createLinearGradient(0, 0, 0, ch);
+      g.addColorStop(0, '#0b0b0b'); g.addColorStop(1, '#071018');
+      _ctx.fillStyle = g; _ctx.fillRect(0, 0, cw, ch);
+      _ctx.font = `${size}px ${_fontFamily}`;
+      _ctx.textAlign = 'center'; _ctx.textBaseline = 'alphabetic';
+      let ascent = 0, descent = 0;
+      try { const m = _ctx.measureText(lines[0] || 'M'); ascent = m.actualBoundingBoxAscent || size * 0.8; descent = m.actualBoundingBoxDescent || size * 0.2; }
+      catch (e) { ascent = size * 0.8; descent = size * 0.2; }
+      const lineHeightRatio = (lines.length > 1) ? _lineHeightRatioMulti : _lineHeightRatioBase;
+      const lineH = (ascent + descent) * lineHeightRatio;
+      const totalH = lineH * lines.length;
+      let startY = (ch - totalH) / 2 + ascent; // 中央寄せ
+      const centerX = cw / 2;
+      _ctx.lineWidth = Math.max(2, Math.floor(size * 0.06));
+      _ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+      _ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < lines.length; i++) {
+        const y = startY + i * lineH;
+        _ctx.strokeText(lines[i], centerX, y);
+        _ctx.fillText(lines[i], centerX, y);
+      }
+    }
+
+    /* ===== Web Speech API 読み上げ ===== */
+    let _voices = [];
+    let _jaVoice = null;
+    let _speaking = false;
+    function _refreshVoices() {
+      if (!('speechSynthesis' in window)) return;
+      _voices = speechSynthesis.getVoices();
+      _jaVoice = _voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja')) || null;
+    }
+    function _textForSpeech() {
+      const normalized = (_lastText || '').replace(/\r\n?|\u2028|\u2029/g, '\n');
+      return normalized.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('、');
+    }
+    function _speak() {
+      if (!('speechSynthesis' in window)) {
+        alert('このブラウザは読み上げに対応していません');
+        return;
+      }
+      try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(_textForSpeech());
+        if (_jaVoice) { u.voice = _jaVoice; u.lang = _jaVoice.lang; }
+        else { u.lang = 'ja-JP'; }
+        u.rate = 1.0; u.pitch = 1.0;
+        u.onstart = () => { _speaking = true; _btnSpeak.textContent = '停止'; };
+        u.onend = () => { _speaking = false; _btnSpeak.textContent = '読み上げ'; };
+        u.onerror = () => { _speaking = false; _btnSpeak.textContent = '読み上げ'; };
+        speechSynthesis.speak(u);
+      } catch (err) {
+        console.error('Speech synthesis failed:', err);
+        alert('読み上げが許可されていません（Permissions Policy）。通常のウェブページとして https で開いてください。');
+      }
+    }
+    function _toggleSpeak() {
+      if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = '読み上げ'; }
+      else { _speak(); }
+    }
+
+    /* ====== ファイル名生成（空白・改行→アンダースコア、拡張子は .png）====== */
+    function _buildFileName(raw) {
+      let s = String(raw ?? '');
+      // 改行系を \n に統一
+      s = s.replace(/\r\n?|\u2028|\u2029/g, '\n');
+      // 半角/全角スペース・タブ・改行をアンダースコアに（1対1変換）
+      s = s.replace(/[\u0020\u3000\t\n\r]/g, '_');
+      // OSで不正になりうる文字は安全側で _ に
+      s = s.replace(/[\\\/:\*?"<>\|#%]/g, '_');
+      // 空なら既定名
+      if (s.length === 0 || /^_*$/.test(s)) s = 'image';
+      // 末尾に拡張子
+      if (!/\.png$/i.test(s)) s += '.png';
+      return s;
+    }
+
+    /* PNG 保存（Blobを直接ダウンロード） */
+    function _savePNG() {
+      const textNow = (_mode === 'view') ? _lastText : _input.value;
+      const fileName = _buildFileName(textNow);
+      if (_mode === 'view') _drawText(); else { _lastText = textNow; _drawText(); }
+      _canvas.toBlob(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName; // 指定どおり、文字列そのまま（空白・改行は_）+ .png
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url); // 即時解放（ブロックされにくい）
+      }, 'image/png');
+    }
+
+    /* モード切替 */
+    function _enterView() {
+      _mode = 'view';
+      document.querySelector('.topbar').style.display = 'none';
+      _lastText = _input.value;
+      _drawText();
+      _canvas.addEventListener('click', _onCanvasClickToEdit);
+      _btnSpeak.style.display = 'inline-flex';
+    }
+    function _enterEdit() {
+      _mode = 'edit';
+      document.querySelector('.topbar').style.display = 'flex';
+      _canvas.removeEventListener('click', _onCanvasClickToEdit);
+      _btnSpeak.style.display = 'none';
+      if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = '読み上げ'; }
+    }
+    function _onCanvasClickToEdit() { _enterEdit(); }
+
+    /* イベント */
+    _btnView.addEventListener('click', () => { if (_mode === 'edit') _enterView(); else _enterEdit(); });
+    _btnSave.addEventListener('click', _savePNG);
+    _btnSpeak.addEventListener('click', _toggleSpeak);
+    _input.addEventListener('input', () => { _lastText = _input.value; if (_mode === 'view') _drawText(); });
+    window.addEventListener('resize', () => { if (_mode === 'view') _drawText(); });
+    window.addEventListener('orientationchange', () => { setTimeout(() => { if (_mode === 'view') _drawText(); }, 120); });
+    window.speechSynthesis?.addEventListener('voiceschanged', _refreshVoices);
+
+    /* --- 簡易セルフテスト --- */
+    function _assert(name, cond) { if (!cond) { console.error('[TEST FAIL]', name); } else { console.log('%c[TEST PASS]', 'color:#4ade80', name); } }
+    function _runSelfTests() {
+      console.group('Self Tests');
+      _assert('toLines basic', JSON.stringify(_toLines('a\nb')) === JSON.stringify(['a', 'b']));
+      _assert('toLines CRLF', JSON.stringify(_toLines('a\r\nb')) === JSON.stringify(['a', 'b']));
+      _assert('toLines CR', JSON.stringify(_toLines('a\rb')) === JSON.stringify(['a', 'b']));
+      _assert('toLines keep empty', JSON.stringify(_toLines('a\n\nb')) === JSON.stringify(['a', ' ', 'b']));
+      _assert('toLines non-string', _toLines(null).length === 1 && _toLines(null)[0] === ' ');
+      // 追加テスト: ファイル名
+      _assert('buildFileName newline/space', _buildFileName('あ い\nう').startsWith('あ_い_う') && _buildFileName('あ い\nう').endsWith('.png'));
+      _assert('buildFileName forbidden chars', _buildFileName('a/b\\c').indexOf('/') === -1 && _buildFileName('a/b\\c').indexOf('\\') === -1);
+      _assert('buildFileName empty -> image.png', _buildFileName('   ').toLowerCase() === 'image.png');
+      console.groupEnd();
+    }
+
+    /* 初期セットアップ */
+    (function _init() {
+      function _fitCanvasToParent() {
+        const mainRect = document.querySelector('main').getBoundingClientRect();
+        _canvas.style.width = mainRect.width + 'px';
+        _canvas.style.height = mainRect.height + 'px';
+        _resizeCanvas();
+      }
+      window.addEventListener('load', _fitCanvasToParent);
+      window.addEventListener('resize', _fitCanvasToParent);
+      _fitCanvasToParent();
+      _enterEdit();
+      _runSelfTests();
+      _refreshVoices();
+    })();
+  </script>
+</body>
+
+</html>
