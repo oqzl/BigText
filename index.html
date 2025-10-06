@@ -113,18 +113,23 @@
       height: 100%;
     }
 
-    .hint {
+    .bottom-hint {
       position: fixed;
       left: 12px;
       bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      z-index: 25;
+    }
+
+    .hint {
       color: var(--muted);
       font-size: 13px
     }
 
     .speak {
-      position: fixed;
-      right: 12px;
-      bottom: 76px;
       background: rgba(255, 255, 255, 0.06);
       border-color: rgba(255, 255, 255, 0.12);
       color: #e5e7eb;
@@ -133,7 +138,11 @@
       font-size: 14px;
       backdrop-filter: blur(4px);
       display: none;
-      z-index: 25
+      position: static
+    }
+
+    body.view-mode main {
+      top: env(safe-area-inset-top);
     }
 
     @media (max-width:420px) {
@@ -167,8 +176,10 @@
   <main>
     <canvas id="canvas"></canvas>
   </main>
-  <button id="btnSpeak" class="speak" title="読み上げ">読み上げ</button>
-  <div class="hint">Tap to Edit</div>
+  <div class="bottom-hint">
+    <button id="btnSpeak" class="speak" title="読み上げ">読み上げ</button>
+    <div class="hint">Tap to Edit</div>
+  </div>
 
   <script>
     /* 実用重視。プライベート関数は先頭にアンダースコア */
@@ -257,7 +268,8 @@
       const lineHeightRatio = (lines.length > 1) ? _lineHeightRatioMulti : _lineHeightRatioBase;
       const lineH = (ascent + descent) * lineHeightRatio;
       const totalH = lineH * lines.length;
-      let startY = (ch - totalH) / 2 + ascent; // 中央寄せ
+      const verticalSpace = Math.max(0, ch - totalH);
+      const startY = verticalSpace * 0.45 + ascent; // 中央より少し上
       const centerX = cw / 2;
       _ctx.lineWidth = Math.max(2, Math.floor(size * 0.06));
       _ctx.strokeStyle = 'rgba(0,0,0,0.6)';
@@ -344,6 +356,7 @@
     /* モード切替 */
     function _enterView() {
       _mode = 'view';
+      document.body.classList.add('view-mode');
       document.querySelector('.topbar').style.display = 'none';
       document.querySelector('.hint').style.display = 'block';
       _lastText = _input.value;
@@ -353,6 +366,7 @@
     }
     function _enterEdit() {
       _mode = 'edit';
+      document.body.classList.remove('view-mode');
       document.querySelector('.topbar').style.display = 'flex';
       document.querySelector('.hint').style.display = 'none';
       _canvas.removeEventListener('click', _onCanvasClickToEdit);
