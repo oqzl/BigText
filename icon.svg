@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0b0b0b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#071018;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" ry="100" fill="url(#bg)" />
+  
+  <!-- Large Text "大" -->
+  <text x="256" y="320" font-family="sans-serif" font-size="280" font-weight="bold" 
+        text-anchor="middle" fill="white" stroke="rgba(0,0,0,0.6)" stroke-width="8">大</text>
+</svg>

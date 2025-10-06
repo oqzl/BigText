@@ -4,7 +4,23 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Canvas 大文字表示デモ v5</title>
+  <title>BigText</title>
+  
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.json" />
+  
+  <!-- iOS specific meta tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BigText" />
+  
+  <!-- Icons for various platforms -->
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+  
+  <!-- Theme color -->
+  <meta name="theme-color" content="#0b0b0b" />
   <style>
     :root {
       --bg: #0b0b0b;
@@ -362,6 +378,19 @@
       _enterEdit();
       _runSelfTests();
       _refreshVoices();
+      
+      // Register service worker for PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(registration => {
+              console.log('SW registered: ', registration);
+            })
+            .catch(registrationError => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
     })();
   </script>
 </body>

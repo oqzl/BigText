@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>アイコン生成</title>
+</head>
+<body>
+    <h2>アイコン生成ツール</h2>
+    <p>以下のボタンでアイコンをダウンロードしてください：</p>
+    <button onclick="generateIcon(192)">192x192 アイコンをダウンロード</button>
+    <button onclick="generateIcon(512)">512x512 アイコンをダウンロード</button>
+    
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script>
+        function generateIcon(size) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = size;
+            canvas.height = size;
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, size);
+            gradient.addColorStop(0, '#0b0b0b');
+            gradient.addColorStop(1, '#071018');
+            
+            // Draw rounded background
+            const radius = size * 0.2;
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fill();
+            
+            // Draw text "大"
+            const fontSize = size * 0.55;
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Text stroke
+            ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+            ctx.lineWidth = size * 0.015;
+            ctx.strokeText('大', size/2, size/2);
+            
+            // Text fill
+            ctx.fillStyle = 'white';
+            ctx.fillText('大', size/2, size/2);
+            
+            // Download
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }, 'image/png');
+        }
+    </script>
+</body>
+</html>
