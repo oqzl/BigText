@@ -43,14 +43,28 @@
       left: 0;
       right: 0;
       top: env(safe-area-inset-top);
-      height: 64px;
+      height: 72px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 8px;
       padding: 12px 8px 8px 8px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
       box-sizing: border-box;
       z-index: 20
+    }
+    
+    .topbar-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .app-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--fg);
+      white-space: nowrap;
     }
 
     .controls {
@@ -83,7 +97,7 @@
 
     main {
       position: fixed;
-      top: calc(env(safe-area-inset-top) + 64px);
+      top: calc(env(safe-area-inset-top) + 72px);
       left: 0;
       right: 0;
       bottom: 0;
@@ -124,11 +138,11 @@
 
     @media (max-width:420px) {
       .topbar {
-        height: 72px
+        height: 80px
       }
 
       main {
-        top: calc(env(safe-area-inset-top) + 72px);
+        top: calc(env(safe-area-inset-top) + 80px);
       }
 
       textarea#input {
@@ -140,12 +154,15 @@
 
 <body>
   <div class="topbar">
-    <div class="controls">
-      <textarea id="input" placeholder="ここに表示したい文字を入力（改行可）">こんにちは
+    <h1 class="app-title">BigText</h1>
+    <div class="topbar-row">
+      <div class="controls">
+        <textarea id="input" placeholder="ここに表示したい文字を入力（改行可）">こんにちは
 二行目です</textarea>
+      </div>
+      <button id="btnView">表示</button>
+      <button id="btnSave">PNG保存</button>
     </div>
-    <button id="btnView">表示</button>
-    <button id="btnSave">PNG保存</button>
   </div>
   <main>
     <canvas id="canvas"></canvas>
