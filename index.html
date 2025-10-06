@@ -328,6 +328,7 @@
     function _enterView() {
       _mode = 'view';
       document.querySelector('.topbar').style.display = 'none';
+      document.querySelector('.hint').style.display = 'block';
       _lastText = _input.value;
       _drawText();
       _canvas.addEventListener('click', _onCanvasClickToEdit);
@@ -336,6 +337,7 @@
     function _enterEdit() {
       _mode = 'edit';
       document.querySelector('.topbar').style.display = 'flex';
+      document.querySelector('.hint').style.display = 'none';
       _canvas.removeEventListener('click', _onCanvasClickToEdit);
       _btnSpeak.style.display = 'none';
       if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = '読み上げ'; }
