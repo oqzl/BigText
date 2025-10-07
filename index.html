@@ -46,7 +46,6 @@
       --shadow-strong: rgba(0, 0, 0, 0.35);
       --float-shadow: rgba(0, 0, 0, 0.25);
       --tagline: rgba(255, 255, 255, 0.72);
-      --speak-color: #e5e7eb;
       --canvas-gradient-start: #0b0b0b;
       --canvas-gradient-end: #071018;
       --canvas-text-fill: #ffffff;
@@ -56,6 +55,7 @@
       --viewport-bottom-offset: 0px;
       --controls-stack-height: 0px;
       --topbar-height: 72px;
+      --view-controls-offset: 0px;
     }
 
     :root[data-theme='light'] {
@@ -70,7 +70,6 @@
       --shadow-strong: rgba(148, 163, 184, 0.45);
       --float-shadow: rgba(148, 163, 184, 0.35);
       --tagline: rgba(30, 41, 59, 0.72);
-      --speak-color: #1f2937;
       --canvas-gradient-start: #f8fafc;
       --canvas-gradient-end: #e0f2fe;
       --canvas-text-fill: #0f172a;
@@ -193,33 +192,6 @@
       transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
 
-    .secondary-actions {
-      display: flex;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .secondary-actions button {
-      flex: 0 0 auto;
-    }
-
-    .hint-message {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .hint-message[hidden] {
-      display: none;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      justify-content: flex-end;
-    }
-
     .theme-toggle {
       width: 44px;
       height: 44px;
@@ -228,6 +200,22 @@
       font-size: 18px;
       padding: 0;
       border-radius: 12px;
+    }
+
+    .theme-toggle-fixed {
+      position: fixed;
+      top: calc(env(safe-area-inset-top) + 16px);
+      right: calc(env(safe-area-inset-right) + 16px);
+      z-index: 40;
+      background: var(--surface-strong);
+      border-color: var(--border-strong);
+      box-shadow: 0 12px 32px var(--float-shadow);
+      backdrop-filter: blur(6px);
+    }
+
+    .theme-toggle-fixed:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 3px;
     }
 
     .theme-toggle span {
@@ -257,42 +245,62 @@
       height: 100%;
     }
 
-    .bottom-hint {
-      position: fixed;
-      left: 12px;
-      bottom: 12px;
+    .edit-actions {
       display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      z-index: 25;
-    }
-
-    .hint {
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .speak {
-      background: var(--surface-strong);
-      border-color: var(--border-strong);
-      color: var(--speak-color);
-      padding: 10px 16px;
-      border-radius: 9999px;
-      font-size: 14px;
-      backdrop-filter: blur(4px);
-      display: inline-flex;
-      align-items: center;
       justify-content: center;
+    }
+
+    .edit-actions button {
+      width: min(260px, 100%);
+      padding: 12px 18px;
+      font-size: 16px;
+      border-radius: 9999px;
+      border-color: var(--border-strong);
+      background: var(--surface-strong);
+      color: var(--fg);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      box-shadow: 0 12px 28px var(--float-shadow);
+    }
+
+    .view-controls {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: calc(env(safe-area-inset-bottom) + 16px);
+      padding: 0 24px;
+      box-sizing: border-box;
+      gap: 16px;
+      justify-content: space-between;
+      z-index: 30;
+    }
+
+    .view-controls button {
+      flex: 1;
+      padding: 12px 18px;
+      font-size: 15px;
+      border-radius: 14px;
+      border-color: var(--border-strong);
+      background: var(--surface-strong);
+      color: var(--fg);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 12px 28px var(--float-shadow);
       transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
 
-    .speak.floating {
-      box-shadow: 0 10px 30px var(--float-shadow);
+    .view-controls button:active {
+      transform: scale(0.98);
+    }
+
+    body.view-mode .view-controls {
+      display: flex;
     }
 
     body.view-mode main {
       top: env(safe-area-inset-top);
+      bottom: calc(env(safe-area-inset-bottom) + var(--view-controls-offset));
     }
 
     @media (max-width: 640px) {
@@ -343,29 +351,15 @@
         flex-direction: column;
       }
 
-      .actions {
-        width: 100%;
-      }
-
-      .actions button:not(.theme-toggle) {
-        flex: 1;
-      }
-
-      .secondary-actions {
-        justify-content: stretch;
-      }
-
-      .secondary-actions button {
-        flex: 1;
+      .theme-toggle-fixed {
+        top: calc(env(safe-area-inset-top) + 12px);
+        right: calc(env(safe-area-inset-right) + 12px);
       }
 
       main {
         top: env(safe-area-inset-top);
       }
 
-      body.view-mode main {
-        bottom: 0;
-      }
     }
 
     @media (max-width:420px) {
@@ -381,6 +375,9 @@
 </head>
 
 <body>
+  <button id="btnTheme" class="theme-toggle theme-toggle-fixed" type="button" aria-pressed="false" aria-label="Switch to light mode" title="Switch to light mode">
+    <span aria-hidden="true">🌙</span>
+  </button>
   <div class="topbar">
     <div class="brand">
       <div class="brand-logo" aria-hidden="true">
@@ -394,27 +391,19 @@
         <div class="input-stack">
           <textarea id="input" placeholder="Type something bold. Line breaks are allowed.">Make it bold.
 Make it unforgettable.</textarea>
-          <div class="secondary-actions">
-            <button id="btnHint" type="button" aria-controls="hintMessage" aria-expanded="false">Hint</button>
-            <button id="btnSpeak" class="speak" type="button" title="Speak the text aloud">Speak</button>
+          <div class="edit-actions">
+            <button id="btnView" type="button">View</button>
           </div>
-          <div id="hintMessage" class="hint-message" hidden role="status">Switch to View mode to fill the screen. Tap the canvas to edit again.</div>
         </div>
-      </div>
-      <div class="actions">
-        <button id="btnView" type="button">View</button>
-        <button id="btnSave" type="button">Save PNG</button>
-        <button id="btnTheme" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode" title="Switch to light mode">
-          <span aria-hidden="true">🌙</span>
-        </button>
       </div>
     </div>
   </div>
   <main>
     <canvas id="canvas"></canvas>
   </main>
-  <div class="bottom-hint">
-    <div class="hint">Tap the canvas to edit</div>
+  <div class="view-controls">
+    <button id="btnSave" type="button">Save PNG</button>
+    <button id="btnSpeak" type="button" title="Speak the text aloud">Speak</button>
   </div>
 
   <script>
@@ -425,13 +414,9 @@ Make it unforgettable.</textarea>
     const _btnView = document.getElementById('btnView');
     const _btnSave = document.getElementById('btnSave');
     const _btnSpeak = document.getElementById('btnSpeak');
-    const _btnHint = document.getElementById('btnHint');
     const _btnTheme = document.getElementById('btnTheme');
     const _topbar = document.querySelector('.topbar');
-    const _secondaryActions = document.querySelector('.secondary-actions');
-    const _hintMessage = document.getElementById('hintMessage');
-    const _bottomHint = document.querySelector('.bottom-hint');
-    const _hintLabel = document.querySelector('.hint');
+    const _viewControls = document.querySelector('.view-controls');
     const _rootStyle = document.documentElement.style;
     const _mobileQuery = window.matchMedia('(max-width: 640px)');
     const _metaThemeColor = document.querySelector('meta[name="theme-color"]');
@@ -611,36 +596,24 @@ Make it unforgettable.</textarea>
 
     function _updateControlOffsets() {
       const overlap = _keyboardOverlap();
-      const topbarRect = _topbar.getBoundingClientRect();
-      _rootStyle.setProperty('--topbar-height', `${topbarRect.height}px`);
+      const topbarHeight = (_topbar && typeof _topbar.getBoundingClientRect === 'function') ? _topbar.getBoundingClientRect().height : 0;
+      _rootStyle.setProperty('--topbar-height', `${topbarHeight}px`);
       _rootStyle.setProperty('--viewport-bottom-offset', `${overlap}px`);
       if (_mobileQuery.matches && _mode === 'edit') {
-        const rect = _topbar.getBoundingClientRect();
-        _rootStyle.setProperty('--controls-stack-height', `${rect.height + overlap}px`);
+        const stackHeight = topbarHeight + overlap;
+        _rootStyle.setProperty('--controls-stack-height', `${stackHeight}px`);
       } else {
         _rootStyle.setProperty('--controls-stack-height', '0px');
       }
-    }
-
-    function _relocateSpeakButtonToFloating() {
-      if (_btnSpeak.parentElement !== _bottomHint) {
-        _bottomHint.insertBefore(_btnSpeak, _hintLabel);
+      if (_mode === 'view' && _viewControls) {
+        const viewRect = _viewControls.getBoundingClientRect();
+        // Extra spacing below view controls (padding in px)
+        const VIEW_CONTROLS_OFFSET_PADDING = 32;
+        const offset = viewRect.height + VIEW_CONTROLS_OFFSET_PADDING;
+        _rootStyle.setProperty('--view-controls-offset', `${offset}px`);
+      } else {
+        _rootStyle.setProperty('--view-controls-offset', '0px');
       }
-      _btnSpeak.classList.add('floating');
-    }
-
-    function _relocateSpeakButtonToStack() {
-      if (_btnSpeak.parentElement !== _secondaryActions) {
-        _secondaryActions.appendChild(_btnSpeak);
-      }
-      _btnSpeak.classList.remove('floating');
-    }
-
-    function _closeHintMessage() {
-      if (!_hintMessage.hasAttribute('hidden')) {
-        _hintMessage.setAttribute('hidden', '');
-      }
-      _btnHint?.setAttribute('aria-expanded', 'false');
     }
 
     /* ===== Web Speech API 読み上げ ===== */
@@ -699,16 +672,6 @@ Make it unforgettable.</textarea>
       else { _speak(); }
     }
 
-    function _toggleHint() {
-      if (_hintMessage.hasAttribute('hidden')) {
-        _hintMessage.removeAttribute('hidden');
-        _btnHint.setAttribute('aria-expanded', 'true');
-      } else {
-        _hintMessage.setAttribute('hidden', '');
-        _btnHint.setAttribute('aria-expanded', 'false');
-      }
-    }
-
     /* ====== ファイル名生成（空白・改行→アンダースコア、拡張子は .png）====== */
     function _buildFileName(raw) {
       let s = String(raw ?? '');
@@ -748,27 +711,21 @@ Make it unforgettable.</textarea>
       _mode = 'view';
       document.body.classList.add('view-mode');
       _topbar.style.display = 'none';
-      _hintLabel.style.display = 'block';
       _btnView.textContent = 'Edit';
       _lastText = _input.value;
       _drawText();
       _canvas.addEventListener('click', _onCanvasClickToEdit);
-      _relocateSpeakButtonToFloating();
       _btnSpeak.textContent = _speaking ? 'Stop' : 'Speak';
-      _closeHintMessage();
       _updateControlOffsets();
     }
     function _enterEdit() {
       _mode = 'edit';
       document.body.classList.remove('view-mode');
       _topbar.style.display = 'flex';
-      _hintLabel.style.display = 'none';
       _btnView.textContent = 'View';
       _canvas.removeEventListener('click', _onCanvasClickToEdit);
-      _relocateSpeakButtonToStack();
       if (_speaking) { speechSynthesis.cancel(); _speaking = false; }
       _btnSpeak.textContent = 'Speak';
-      _closeHintMessage();
       // Clear canvas in edit mode
       _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
       requestAnimationFrame(_updateControlOffsets);
@@ -778,7 +735,6 @@ Make it unforgettable.</textarea>
     /* イベント */
     _btnView.addEventListener('click', () => { if (_mode === 'edit') _enterView(); else _enterEdit(); });
     _btnSave.addEventListener('click', _savePNG);
-    _btnHint.addEventListener('click', _toggleHint);
     _btnSpeak.addEventListener('click', _toggleSpeak);
     _btnTheme?.addEventListener('click', _toggleTheme);
     _input.addEventListener('input', () => {
