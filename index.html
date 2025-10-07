@@ -89,6 +89,7 @@
       background: var(--bg);
       color: var(--fg);
       transition: background 0.3s ease, color 0.3s ease;
+      touch-action: manipulation;
     }
 
     .topbar {
@@ -387,6 +388,52 @@
       }
     }
   </style>
+  <script>
+    (function () {
+      const viewport = document.querySelector("meta[name='viewport']");
+      const lockedContent =
+        'width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover';
+
+      function lockViewport() {
+        if (!viewport) {
+          return;
+        }
+
+        if (viewport.getAttribute('content') !== lockedContent) {
+          viewport.setAttribute('content', lockedContent);
+        }
+      }
+
+      let lastTouchEnd = 0;
+
+      document.addEventListener(
+        'touchend',
+        (event) => {
+          const now = Date.now();
+
+          if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+          }
+
+          lastTouchEnd = now;
+        },
+        { passive: false, capture: true }
+      );
+
+      ['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
+        document.addEventListener(
+          type,
+          (event) => {
+            event.preventDefault();
+            lockViewport();
+          },
+          { passive: false }
+        );
+      });
+
+      lockViewport();
+    })();
+  </script>
 </head>
 
 <body>
