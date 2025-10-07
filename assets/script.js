@@ -29,7 +29,7 @@ function _initDOMElements() {
   _btnTheme = document.getElementById("btnTheme");
   _topbar = document.querySelector(".topbar");
   _viewControls = document.querySelector(".view-controls");
-  
+
   // Initialize _lastText with input value
   _lastText = _input.value || "";
 }
@@ -530,7 +530,7 @@ function _runSelfTests() {
     _enterEdit();
     _runSelfTests();
     _refreshVoices();
-    
+
     if (!("speechSynthesis" in window)) {
       _btnSpeak.disabled = true;
       _btnSpeak.title = "Speech synthesis is not supported in this browser.";
