@@ -26,7 +26,9 @@
       --bg: #0b0b0b;
       --ui: #0f1720;
       --fg: #fff;
-      --muted: #9aa4b2
+      --muted: #9aa4b2;
+      --viewport-bottom-offset: 0px;
+      --controls-stack-height: 0px
     }
 
     html,
@@ -95,12 +97,17 @@
       font-size: 14px
     }
 
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
     main {
       position: fixed;
       top: calc(env(safe-area-inset-top) + 72px);
       left: 0;
       right: 0;
-      bottom: 0;
+      bottom: var(--controls-stack-height);
       background: var(--bg);
       display: flex;
       align-items: center;
@@ -145,13 +152,45 @@
       top: env(safe-area-inset-top);
     }
 
-    @media (max-width:420px) {
+    @media (max-width: 640px) {
       .topbar {
-        height: 80px
+        top: auto;
+        height: auto;
+        bottom: calc(env(safe-area-inset-bottom) + var(--viewport-bottom-offset));
+        padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+        background: linear-gradient(0deg, rgba(255, 255, 255, 0.04), transparent);
+        align-items: stretch;
+      }
+
+      .topbar-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .controls {
+        width: 100%;
+      }
+
+      .actions {
+        width: 100%;
+      }
+
+      .actions button {
+        flex: 1;
       }
 
       main {
-        top: calc(env(safe-area-inset-top) + 80px);
+        top: env(safe-area-inset-top);
+      }
+
+      body.view-mode main {
+        bottom: 0;
+      }
+    }
+
+    @media (max-width:420px) {
+      .topbar {
+        height: 80px
       }
 
       textarea#input {
@@ -169,8 +208,10 @@
         <textarea id="input" placeholder="ここに表示したい文字を入力（改行可）">こんにちは
 二行目です</textarea>
       </div>
-      <button id="btnView">表示</button>
-      <button id="btnSave">PNG保存</button>
+      <div class="actions">
+        <button id="btnView">表示</button>
+        <button id="btnSave">PNG保存</button>
+      </div>
     </div>
   </div>
   <main>
@@ -189,6 +230,9 @@
     const _btnView = document.getElementById('btnView');
     const _btnSave = document.getElementById('btnSave');
     const _btnSpeak = document.getElementById('btnSpeak');
+    const _topbar = document.querySelector('.topbar');
+    const _rootStyle = document.documentElement.style;
+    const _mobileQuery = window.matchMedia('(max-width: 640px)');
 
     let _mode = 'edit'; // 'edit' or 'view'
     let _lastText = _input.value || '';
@@ -281,6 +325,26 @@
       }
     }
 
+    /* ===== レイアウト補助 ===== */
+    function _keyboardOverlap() {
+      if (!window.visualViewport) return 0;
+      const vv = window.visualViewport;
+      const layoutHeight = window.innerHeight;
+      const overlap = layoutHeight - (vv.height + vv.offsetTop);
+      return Math.max(0, overlap);
+    }
+
+    function _updateControlOffsets() {
+      const overlap = _keyboardOverlap();
+      _rootStyle.setProperty('--viewport-bottom-offset', `${overlap}px`);
+      if (_mobileQuery.matches && _mode === 'edit') {
+        const rect = _topbar.getBoundingClientRect();
+        _rootStyle.setProperty('--controls-stack-height', `${rect.height + overlap}px`);
+      } else {
+        _rootStyle.setProperty('--controls-stack-height', '0px');
+      }
+    }
+
     /* ===== Web Speech API 読み上げ ===== */
     let _voices = [];
     let _jaVoice = null;
@@ -357,23 +421,25 @@
     function _enterView() {
       _mode = 'view';
       document.body.classList.add('view-mode');
-      document.querySelector('.topbar').style.display = 'none';
+      _topbar.style.display = 'none';
       document.querySelector('.hint').style.display = 'block';
       _lastText = _input.value;
       _drawText();
       _canvas.addEventListener('click', _onCanvasClickToEdit);
       _btnSpeak.style.display = 'inline-flex';
+      _updateControlOffsets();
     }
     function _enterEdit() {
       _mode = 'edit';
       document.body.classList.remove('view-mode');
-      document.querySelector('.topbar').style.display = 'flex';
+      _topbar.style.display = 'flex';
       document.querySelector('.hint').style.display = 'none';
       _canvas.removeEventListener('click', _onCanvasClickToEdit);
       _btnSpeak.style.display = 'none';
       if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = '読み上げ'; }
       // Clear canvas in edit mode
       _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
+      requestAnimationFrame(_updateControlOffsets);
     }
     function _onCanvasClickToEdit() { _enterEdit(); }
 
@@ -381,9 +447,21 @@
     _btnView.addEventListener('click', () => { if (_mode === 'edit') _enterView(); else _enterEdit(); });
     _btnSave.addEventListener('click', _savePNG);
     _btnSpeak.addEventListener('click', _toggleSpeak);
-    _input.addEventListener('input', () => { _lastText = _input.value; if (_mode === 'view') _drawText(); });
-    window.addEventListener('resize', () => { if (_mode === 'view') _drawText(); });
-    window.addEventListener('orientationchange', () => { setTimeout(() => { if (_mode === 'view') _drawText(); }, 120); });
+    _input.addEventListener('input', () => {
+      _lastText = _input.value;
+      if (_mode === 'view') _drawText();
+      requestAnimationFrame(_updateControlOffsets);
+    });
+    window.addEventListener('resize', () => {
+      _updateControlOffsets();
+      if (_mode === 'view') requestAnimationFrame(_drawText);
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        _updateControlOffsets();
+        if (_mode === 'view') _drawText();
+      }, 120);
+    });
     window.speechSynthesis?.addEventListener('voiceschanged', _refreshVoices);
 
     /* --- 簡易セルフテスト --- */
@@ -413,20 +491,30 @@
       
       // Visual Viewport API for iOS keyboard handling
       function _handleVisualViewportChange() {
+        _updateControlOffsets();
         if (_mode === 'view') {
           _fitCanvasToParent();
           _drawText();
         }
       }
-      
-      window.addEventListener('load', _fitCanvasToParent);
-      window.addEventListener('resize', _fitCanvasToParent);
-      
+
+      window.addEventListener('load', () => { _fitCanvasToParent(); _updateControlOffsets(); });
+      window.addEventListener('resize', () => { _fitCanvasToParent(); _updateControlOffsets(); });
+
       // Add visual viewport support for iOS keyboard
       if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', _handleVisualViewportChange);
+        window.visualViewport.addEventListener('scroll', _handleVisualViewportChange);
       }
-      
+
+      const _onMediaChange = () => {
+        _updateControlOffsets();
+        _fitCanvasToParent();
+        if (_mode === 'view') _drawText();
+      };
+      if (_mobileQuery.addEventListener) _mobileQuery.addEventListener('change', _onMediaChange);
+      else if (_mobileQuery.addListener) _mobileQuery.addListener(_onMediaChange);
+
       _fitCanvasToParent();
       _enterEdit();
       _runSelfTests();
