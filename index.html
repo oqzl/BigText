@@ -109,26 +109,12 @@
     }
 
     .brand {
-      display: grid;
-      gap: 16px;
-      justify-items: center;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      align-items: center;
       width: min(960px, 100%);
-    }
-
-    .brand-logo {
-      width: clamp(60px, 8vw, 96px);
-      height: clamp(60px, 8vw, 96px);
-      border-radius: 32px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, var(--surface-strong), transparent);
-      box-shadow: inset 0 0 0 1px var(--border-strong);
-    }
-
-    .brand-logo img {
-      width: 60%;
-      height: auto;
-      filter: drop-shadow(0 4px 16px var(--brand-shadow));
+      text-align: center;
     }
 
     .topbar-row {
@@ -141,12 +127,13 @@
 
     .app-title {
       margin: 0;
-      font-size: clamp(42px, 10vw, 96px);
+      font-size: clamp(56px, 12vw, 128px);
       font-family: "Helvetica Neue", "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
       font-weight: 200;
       letter-spacing: -0.01em;
       color: var(--fg);
       text-shadow: 0 16px 36px var(--shadow-strong);
+      line-height: 1;
     }
 
     .app-tagline {
@@ -207,13 +194,27 @@
 
     .theme-toggle-fixed {
       position: fixed;
-      top: calc(env(safe-area-inset-top) + 16px);
-      right: calc(env(safe-area-inset-right) + 16px);
+      top: 16px;
+      right: 16px;
       z-index: 40;
       background: var(--surface-strong);
       border-color: var(--border-strong);
       box-shadow: 0 12px 32px var(--float-shadow);
       backdrop-filter: blur(6px);
+    }
+
+    @supports (top: calc(16px + env(safe-area-inset-top))) {
+      .theme-toggle-fixed {
+        top: calc(16px + env(safe-area-inset-top));
+        right: calc(16px + env(safe-area-inset-right));
+      }
+    }
+
+    @supports (top: constant(safe-area-inset-top)) {
+      .theme-toggle-fixed {
+        top: calc(16px + constant(safe-area-inset-top));
+        right: calc(16px + constant(safe-area-inset-right));
+      }
     }
 
     .theme-toggle-fixed:focus-visible {
@@ -274,8 +275,8 @@
       bottom: calc(env(safe-area-inset-bottom) + 16px);
       padding: 0 24px;
       box-sizing: border-box;
-      gap: 16px;
-      justify-content: space-between;
+      gap: 12px;
+      justify-content: center;
       z-index: 30;
     }
 
@@ -319,23 +320,14 @@
       }
 
       .brand {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        align-items: center;
-        justify-items: start;
+        align-items: flex-start;
         width: 100%;
         text-align: left;
         gap: 12px;
       }
 
-      .brand-logo {
-        width: 56px;
-        height: 56px;
-        border-radius: 20px;
-      }
-
       .app-title {
-        font-size: clamp(32px, 12vw, 44px);
+        font-size: clamp(40px, 18vw, 64px);
       }
 
       .app-tagline {
@@ -355,8 +347,22 @@
       }
 
       .theme-toggle-fixed {
-        top: calc(env(safe-area-inset-top) + 12px);
-        right: calc(env(safe-area-inset-right) + 12px);
+        top: 12px;
+        right: 12px;
+      }
+
+      @supports (top: calc(env(safe-area-inset-top) + 12px)) {
+        .theme-toggle-fixed {
+          top: calc(env(safe-area-inset-top) + 12px);
+          right: calc(env(safe-area-inset-right) + 12px);
+        }
+      }
+
+      @supports (top: calc(constant(safe-area-inset-top) + 12px)) {
+        .theme-toggle-fixed {
+          top: calc(constant(safe-area-inset-top) + 12px);
+          right: calc(constant(safe-area-inset-right) + 12px);
+        }
       }
 
       main {
@@ -383,9 +389,6 @@
   </button>
   <div class="topbar">
     <div class="brand">
-      <div class="brand-logo" aria-hidden="true">
-        <img src="icon.svg" alt="" />
-      </div>
       <h1 class="app-title">BigText</h1>
       <p class="app-tagline">Say it loud. Make every word larger than life.</p>
     </div>
@@ -405,6 +408,7 @@ Make it unforgettable.</textarea>
     <canvas id="canvas"></canvas>
   </main>
   <div class="view-controls">
+    <button id="btnViewEdit" type="button">Edit</button>
     <button id="btnSave" type="button">Save PNG</button>
     <button id="btnSpeak" type="button" title="Speak the text aloud">Speak</button>
   </div>
@@ -417,6 +421,7 @@ Make it unforgettable.</textarea>
     const _btnView = document.getElementById('btnView');
     const _btnSave = document.getElementById('btnSave');
     const _btnSpeak = document.getElementById('btnSpeak');
+    const _btnViewEdit = document.getElementById('btnViewEdit');
     const _btnTheme = document.getElementById('btnTheme');
     const _topbar = document.querySelector('.topbar');
     const _viewControls = document.querySelector('.view-controls');
@@ -739,6 +744,7 @@ Make it unforgettable.</textarea>
     _btnView.addEventListener('click', () => { if (_mode === 'edit') _enterView(); else _enterEdit(); });
     _btnSave.addEventListener('click', _savePNG);
     _btnSpeak.addEventListener('click', _toggleSpeak);
+    if (_btnViewEdit) { _btnViewEdit.addEventListener('click', _enterEdit); }
     _btnTheme?.addEventListener('click', _toggleTheme);
     _input.addEventListener('input', () => {
       _lastText = _input.value;
