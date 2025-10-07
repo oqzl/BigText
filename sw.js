@@ -1,10 +1,12 @@
-const CACHE_NAME = 'bigtext-v1';
+const CACHE_NAME = 'bigtext-v2';
 const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './assets/style.css',
+  './assets/script.js'
 ];
 
 // Install event - cache resources
