@@ -29,6 +29,7 @@
       --muted: #9aa4b2;
       --viewport-bottom-offset: 0px;
       --controls-stack-height: 0px;
+      --topbar-height: 72px;
     }
 
     html,
@@ -45,28 +46,64 @@
       left: 0;
       right: 0;
       top: env(safe-area-inset-top);
-      height: 72px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 12px 8px 8px 8px;
+      align-items: center;
+      gap: 24px;
+      padding: clamp(32px, 8vw, 96px) 24px 24px;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+      text-align: center;
+      backdrop-filter: blur(14px);
       box-sizing: border-box;
       z-index: 20
     }
-    
+
+    .brand {
+      display: grid;
+      gap: 16px;
+      justify-items: center;
+      width: min(960px, 100%);
+    }
+
+    .brand-logo {
+      width: clamp(60px, 8vw, 96px);
+      height: clamp(60px, 8vw, 96px);
+      border-radius: 32px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    .brand-logo img {
+      width: 60%;
+      height: auto;
+      filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.35));
+    }
+
     .topbar-row {
       display: flex;
       align-items: center;
       gap: 8px;
+      width: min(960px, 100%);
     }
 
     .app-title {
       margin: 0;
-      font-size: 18px;
-      font-weight: 600;
+      font-size: clamp(42px, 10vw, 96px);
+      font-family: "Helvetica Neue", "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
+      font-weight: 200;
+      letter-spacing: -0.01em;
       color: var(--fg);
-      white-space: nowrap;
+      text-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+    }
+
+    .app-tagline {
+      margin: 0;
+      font-size: clamp(16px, 2.6vw, 24px);
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.72);
+      letter-spacing: 0.02em;
     }
 
     .controls {
@@ -132,7 +169,7 @@
 
     main {
       position: fixed;
-      top: calc(env(safe-area-inset-top) + 72px);
+      top: calc(env(safe-area-inset-top) + var(--topbar-height));
       left: 0;
       right: 0;
       bottom: var(--controls-stack-height);
@@ -194,11 +231,18 @@
         padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
         background: linear-gradient(0deg, rgba(255, 255, 255, 0.04), transparent);
         align-items: stretch;
+        gap: 12px;
+        text-align: left;
+      }
+
+      .brand {
+        display: none;
       }
 
       .topbar-row {
         flex-direction: column;
         align-items: stretch;
+        width: 100%;
       }
 
       .controls {
@@ -245,7 +289,13 @@
 
 <body>
   <div class="topbar">
-    <h1 class="app-title">BigText</h1>
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">
+        <img src="icon.svg" alt="" />
+      </div>
+      <h1 class="app-title">BigText</h1>
+      <p class="app-tagline">Say it loud. Make every word larger than life.</p>
+    </div>
     <div class="topbar-row">
       <div class="controls">
         <div class="input-stack">
@@ -390,6 +440,8 @@ Make it unforgettable.</textarea>
 
     function _updateControlOffsets() {
       const overlap = _keyboardOverlap();
+      const topbarRect = _topbar.getBoundingClientRect();
+      _rootStyle.setProperty('--topbar-height', `${topbarRect.height}px`);
       _rootStyle.setProperty('--viewport-bottom-offset', `${overlap}px`);
       if (_mobileQuery.matches && _mode === 'edit') {
         const rect = _topbar.getBoundingClientRect();
