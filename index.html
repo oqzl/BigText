@@ -1,849 +1,1058 @@
 <!doctype html>
 <html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+    />
+    <title>BigText</title>
 
-<head>
-  <meta charset="utf-8" />
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
-  />
-  <title>BigText</title>
-  
-  <!-- PWA manifest -->
-  <link rel="manifest" href="manifest.json" />
-  
-  <!-- iOS specific meta tags -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="BigText" />
-  
-  <!-- Icons for various platforms -->
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
-  
-  <!-- Theme color -->
-  <meta name="theme-color" content="#0b0b0b" />
-  <script>
-    (function () {
-      try {
-        const stored = localStorage.getItem('bigtext-theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const initial = stored === 'light' || stored === 'dark' ? stored : (prefersDark ? 'dark' : 'light');
-        document.documentElement.dataset.theme = initial;
-      } catch (err) {
-        document.documentElement.dataset.theme = 'dark';
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- iOS specific meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="BigText" />
+
+    <!-- Icons for various platforms -->
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+
+    <!-- Theme color -->
+    <meta name="theme-color" content="#0b0b0b" />
+    <script>
+      (function () {
+        try {
+          const stored = localStorage.getItem("bigtext-theme");
+          const prefersDark =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches;
+          const initial =
+            stored === "light" || stored === "dark"
+              ? stored
+              : prefersDark
+                ? "dark"
+                : "light";
+          document.documentElement.dataset.theme = initial;
+        } catch (err) {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0b0b;
+        --fg: #ffffff;
+        --muted: #9aa4b2;
+        --surface: rgba(255, 255, 255, 0.02);
+        --surface-strong: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.08);
+        --border-strong: rgba(255, 255, 255, 0.12);
+        --shadow-strong: rgba(0, 0, 0, 0.35);
+        --float-shadow: rgba(0, 0, 0, 0.25);
+        --tagline: rgba(255, 255, 255, 0.72);
+        --canvas-gradient-start: #0b0b0b;
+        --canvas-gradient-end: #071018;
+        --canvas-text-fill: #ffffff;
+        --canvas-text-stroke: rgba(0, 0, 0, 0.6);
+        --topbar-gradient-start: rgba(255, 255, 255, 0.02);
+        --brand-shadow: rgba(15, 23, 42, 0.45);
+        --viewport-bottom-offset: 0px;
+        --controls-stack-height: 0px;
+        --topbar-height: 72px;
+        --view-controls-offset: 0px;
       }
-    })();
-  </script>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #0b0b0b;
-      --fg: #ffffff;
-      --muted: #9aa4b2;
-      --surface: rgba(255, 255, 255, 0.02);
-      --surface-strong: rgba(255, 255, 255, 0.06);
-      --border: rgba(255, 255, 255, 0.08);
-      --border-strong: rgba(255, 255, 255, 0.12);
-      --shadow-strong: rgba(0, 0, 0, 0.35);
-      --float-shadow: rgba(0, 0, 0, 0.25);
-      --tagline: rgba(255, 255, 255, 0.72);
-      --canvas-gradient-start: #0b0b0b;
-      --canvas-gradient-end: #071018;
-      --canvas-text-fill: #ffffff;
-      --canvas-text-stroke: rgba(0, 0, 0, 0.6);
-      --topbar-gradient-start: rgba(255, 255, 255, 0.02);
-      --brand-shadow: rgba(15, 23, 42, 0.45);
-      --viewport-bottom-offset: 0px;
-      --controls-stack-height: 0px;
-      --topbar-height: 72px;
-      --view-controls-offset: 0px;
-    }
 
-    :root[data-theme='light'] {
-      color-scheme: light;
-      --bg: #f3f5fa;
-      --fg: #0f172a;
-      --muted: #4b5563;
-      --surface: rgba(15, 23, 42, 0.04);
-      --surface-strong: rgba(148, 163, 184, 0.16);
-      --border: rgba(148, 163, 184, 0.4);
-      --border-strong: rgba(100, 116, 139, 0.45);
-      --shadow-strong: rgba(148, 163, 184, 0.45);
-      --float-shadow: rgba(148, 163, 184, 0.35);
-      --tagline: rgba(30, 41, 59, 0.72);
-      --canvas-gradient-start: #f8fafc;
-      --canvas-gradient-end: #e0f2fe;
-      --canvas-text-fill: #0f172a;
-      --canvas-text-stroke: rgba(148, 163, 184, 0.6);
-      --topbar-gradient-start: rgba(148, 163, 184, 0.16);
-      --brand-shadow: rgba(148, 163, 184, 0.4);
-    }
-
-    html,
-    body {
-      height: 100%;
-      margin: 0;
-      font-family: system-ui, -apple-system, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-      transition: background 0.3s ease, color 0.3s ease;
-    }
-
-    .topbar {
-      position: fixed;
-      left: 0;
-      right: 0;
-      top: env(safe-area-inset-top);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-      padding: clamp(32px, 8vw, 96px) 24px 24px;
-      background: linear-gradient(180deg, var(--topbar-gradient-start), transparent);
-      text-align: center;
-      backdrop-filter: blur(14px);
-      box-sizing: border-box;
-      z-index: 20;
-    }
-
-    .brand {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      align-items: center;
-      width: min(960px, 100%);
-      text-align: center;
-    }
-
-    .topbar-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: min(960px, 100%);
-      justify-content: space-between;
-    }
-
-    .app-title {
-      margin: 0;
-      font-size: clamp(56px, 12vw, 128px);
-      font-family: "Helvetica Neue", "Segoe UI", "Noto Sans JP", "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
-      font-weight: 200;
-      letter-spacing: -0.01em;
-      color: var(--fg);
-      text-shadow: 0 16px 36px var(--shadow-strong);
-      line-height: 1;
-    }
-
-    .app-tagline {
-      margin: 0;
-      font-size: clamp(16px, 2.6vw, 24px);
-      font-weight: 500;
-      color: var(--tagline);
-      letter-spacing: 0.02em;
-    }
-
-    .controls {
-      display: flex;
-      gap: 8px;
-      flex: 1;
-      align-items: stretch;
-    }
-
-    .input-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      width: 100%;
-    }
-
-    textarea#input {
-      flex: 1;
-      min-height: 48px;
-      max-height: 160px;
-      border-radius: 8px;
-      padding: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--fg);
-      resize: vertical;
-      font-size: 16px;
-      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-    }
-
-    button {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 8px 10px;
-      border-radius: 8px;
-      font-size: 14px;
-      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-    }
-
-    .theme-toggle {
-      width: 44px;
-      height: 44px;
-      display: grid;
-      place-items: center;
-      font-size: 18px;
-      padding: 0;
-      border-radius: 12px;
-    }
-
-    .theme-toggle-fixed {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      z-index: 40;
-      background: var(--surface-strong);
-      border-color: var(--border-strong);
-      box-shadow: 0 12px 32px var(--float-shadow);
-      backdrop-filter: blur(6px);
-    }
-
-    @supports (top: calc(16px + env(safe-area-inset-top))) {
-      .theme-toggle-fixed {
-        top: calc(16px + env(safe-area-inset-top));
-        right: calc(16px + env(safe-area-inset-right));
+      :root[data-theme="light"] {
+        color-scheme: light;
+        --bg: #f3f5fa;
+        --fg: #0f172a;
+        --muted: #4b5563;
+        --surface: rgba(15, 23, 42, 0.04);
+        --surface-strong: rgba(148, 163, 184, 0.16);
+        --border: rgba(148, 163, 184, 0.4);
+        --border-strong: rgba(100, 116, 139, 0.45);
+        --shadow-strong: rgba(148, 163, 184, 0.45);
+        --float-shadow: rgba(148, 163, 184, 0.35);
+        --tagline: rgba(30, 41, 59, 0.72);
+        --canvas-gradient-start: #f8fafc;
+        --canvas-gradient-end: #e0f2fe;
+        --canvas-text-fill: #0f172a;
+        --canvas-text-stroke: rgba(148, 163, 184, 0.6);
+        --topbar-gradient-start: rgba(148, 163, 184, 0.16);
+        --brand-shadow: rgba(148, 163, 184, 0.4);
       }
-    }
 
-    @supports (top: constant(safe-area-inset-top)) {
-      .theme-toggle-fixed {
-        top: calc(16px + constant(safe-area-inset-top));
-        right: calc(16px + constant(safe-area-inset-right));
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Noto Sans JP",
+          "Hiragino Kaku Gothic ProN",
+          "メイリオ",
+          sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        transition:
+          background 0.3s ease,
+          color 0.3s ease;
       }
-    }
 
-    .theme-toggle-fixed:focus-visible {
-      outline: 2px solid currentColor;
-      outline-offset: 3px;
-    }
-
-    .theme-toggle span {
-      line-height: 1;
-    }
-
-    .theme-toggle:focus-visible {
-      outline: 2px solid currentColor;
-      outline-offset: 2px;
-    }
-
-    main {
-      position: fixed;
-      top: calc(env(safe-area-inset-top) + var(--topbar-height));
-      left: 0;
-      right: 0;
-      bottom: var(--controls-stack-height);
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    canvas {
-      display: block;
-      max-width: 100%;
-      height: 100%;
-    }
-
-    .edit-actions {
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .edit-actions button {
-      width: auto;
-      padding: 6px 12px;
-      font-size: 13px;
-      border-radius: 9999px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--muted);
-      font-weight: 500;
-      letter-spacing: 0.01em;
-      box-shadow: none;
-      white-space: nowrap;
-    }
-
-    .edit-actions button:hover {
-      background: var(--surface);
-      color: var(--fg);
-    }
-
-    .view-controls {
-      display: none;
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: calc(env(safe-area-inset-bottom) + 16px);
-      padding: 0 24px;
-      box-sizing: border-box;
-      gap: 12px;
-      justify-content: center;
-      z-index: 30;
-    }
-
-    .view-controls button {
-      flex: 1;
-      padding: 10px 16px;
-      font-size: 13px;
-      border-radius: 14px;
-      border-color: var(--border-strong);
-      background: var(--surface-strong);
-      color: var(--fg);
-      font-weight: 600;
-      letter-spacing: 0.01em;
-      box-shadow: 0 12px 28px var(--float-shadow);
-      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-      white-space: nowrap;
-    }
-
-    .view-controls button:active {
-      transform: scale(0.98);
-    }
-
-    body.view-mode .view-controls {
-      display: flex;
-    }
-
-    body.view-mode main {
-      top: env(safe-area-inset-top);
-      bottom: calc(env(safe-area-inset-bottom) + var(--view-controls-offset));
-    }
-
-    @media (max-width: 640px) {
       .topbar {
-        top: auto;
-        height: auto;
-        bottom: calc(env(safe-area-inset-bottom) + var(--viewport-bottom-offset));
-        padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
-        background: linear-gradient(0deg, rgba(255, 255, 255, 0.04), transparent);
-        align-items: stretch;
-        gap: 12px;
-        text-align: left;
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: env(safe-area-inset-top);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        padding: clamp(32px, 8vw, 96px) 24px 24px;
+        background: linear-gradient(
+          180deg,
+          var(--topbar-gradient-start),
+          transparent
+        );
+        text-align: center;
+        backdrop-filter: blur(14px);
+        box-sizing: border-box;
+        z-index: 20;
       }
 
       .brand {
-        align-items: flex-start;
-        width: 100%;
-        text-align: left;
-        gap: 12px;
-      }
-
-      .app-title {
-        font-size: clamp(40px, 18vw, 64px);
-      }
-
-      .app-tagline {
-        display: none;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+        width: min(960px, 100%);
+        text-align: center;
       }
 
       .topbar-row {
-        flex-direction: column;
-        align-items: stretch;
-        width: 100%;
-        gap: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: min(960px, 100%);
+        justify-content: space-between;
+      }
+
+      .app-title {
+        margin: 0;
+        font-size: clamp(56px, 12vw, 128px);
+        font-family:
+          "Helvetica Neue", "Segoe UI", "Noto Sans JP",
+          "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
+        font-weight: 200;
+        letter-spacing: -0.01em;
+        color: var(--fg);
+        text-shadow: 0 16px 36px var(--shadow-strong);
+        line-height: 1;
+      }
+
+      .app-tagline {
+        margin: 0;
+        font-size: clamp(16px, 2.6vw, 24px);
+        font-weight: 500;
+        color: var(--tagline);
+        letter-spacing: 0.02em;
       }
 
       .controls {
-        width: 100%;
+        display: flex;
+        gap: 8px;
+        flex: 1;
+        align-items: stretch;
+      }
+
+      .input-stack {
+        display: flex;
         flex-direction: column;
-      }
-
-      .theme-toggle-fixed {
-        top: 12px;
-        right: 12px;
-      }
-
-      @supports (top: calc(env(safe-area-inset-top) + 12px)) {
-        .theme-toggle-fixed {
-          top: calc(env(safe-area-inset-top) + 12px);
-          right: calc(env(safe-area-inset-right) + 12px);
-        }
-      }
-
-      @supports (top: calc(constant(safe-area-inset-top) + 12px)) {
-        .theme-toggle-fixed {
-          top: calc(constant(safe-area-inset-top) + 12px);
-          right: calc(constant(safe-area-inset-right) + 12px);
-        }
-      }
-
-      main {
-        top: env(safe-area-inset-top);
-      }
-
-    }
-
-    @media (max-width:420px) {
-      .topbar {
-        /* height: 80px */
+        gap: 8px;
+        width: 100%;
       }
 
       textarea#input {
-        font-size: 15px;
+        flex: 1;
+        min-height: 48px;
+        max-height: 160px;
+        border-radius: 8px;
+        padding: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--fg);
+        resize: vertical;
+        font-size: 16px;
+        transition:
+          background 0.3s ease,
+          border-color 0.3s ease,
+          color 0.3s ease;
       }
-    }
-  </style>
-</head>
 
-<body>
-  <button id="btnTheme" class="theme-toggle theme-toggle-fixed" type="button" aria-pressed="false" aria-label="Switch to light mode" title="Switch to light mode">
-    <span aria-hidden="true">🌙</span>
-  </button>
-  <div class="topbar">
-    <div class="brand">
-      <h1 class="app-title">BigText</h1>
-      <p class="app-tagline">Say it loud. Make every word larger than life.</p>
-    </div>
-    <div class="topbar-row">
-      <div class="controls">
-        <div class="input-stack">
-          <textarea id="input" placeholder="Type something bold. Line breaks are allowed.">なにかお困りですか？
-お手伝いしましょうか？</textarea>
-          <div class="edit-actions">
-            <button id="btnView" type="button">View</button>
+      button {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 14px;
+        transition:
+          background 0.2s ease,
+          color 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .theme-toggle {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        font-size: 18px;
+        padding: 0;
+        border-radius: 12px;
+      }
+
+      .theme-toggle-fixed {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 40;
+        background: var(--surface-strong);
+        border-color: var(--border-strong);
+        box-shadow: 0 12px 32px var(--float-shadow);
+        backdrop-filter: blur(6px);
+      }
+
+      @supports (top: calc(16px + env(safe-area-inset-top))) {
+        .theme-toggle-fixed {
+          top: calc(16px + env(safe-area-inset-top));
+          right: calc(16px + env(safe-area-inset-right));
+        }
+      }
+
+      @supports (top: constant(safe-area-inset-top)) {
+        .theme-toggle-fixed {
+          top: calc(16px + constant(safe-area-inset-top));
+          right: calc(16px + constant(safe-area-inset-right));
+        }
+      }
+
+      .theme-toggle-fixed:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 3px;
+      }
+
+      .theme-toggle span {
+        line-height: 1;
+      }
+
+      .theme-toggle:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 2px;
+      }
+
+      main {
+        position: fixed;
+        top: calc(env(safe-area-inset-top) + var(--topbar-height));
+        left: 0;
+        right: 0;
+        bottom: var(--controls-stack-height);
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      canvas {
+        display: block;
+        max-width: 100%;
+        height: 100%;
+      }
+
+      .edit-actions {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .action-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 108px;
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        border-radius: 14px;
+        border: 1px solid var(--border-strong);
+        background: var(--surface-strong);
+        color: var(--fg);
+        box-shadow: 0 12px 28px var(--float-shadow);
+        transition:
+          background 0.2s ease,
+          color 0.2s ease,
+          border-color 0.2s ease,
+          transform 0.2s ease;
+        white-space: nowrap;
+        text-decoration: none;
+        cursor: pointer;
+        gap: 6px;
+      }
+
+      .action-button:hover {
+        background: var(--surface);
+        color: var(--fg);
+      }
+
+      .action-button:focus-visible {
+        outline: 2px solid var(--border-strong);
+        outline-offset: 2px;
+      }
+
+      .action-button:active {
+        transform: scale(0.98);
+      }
+
+      .view-controls {
+        display: none;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: calc(env(safe-area-inset-bottom) + 16px);
+        padding: 0 24px;
+        box-sizing: border-box;
+        gap: 12px;
+        justify-content: center;
+        z-index: 30;
+      }
+
+      .view-controls .action-button {
+        flex: 0 1 auto;
+      }
+
+      body.view-mode .view-controls {
+        display: flex;
+      }
+
+      body.view-mode main {
+        top: env(safe-area-inset-top);
+        bottom: calc(env(safe-area-inset-bottom) + var(--view-controls-offset));
+      }
+
+      @media (max-width: 640px) {
+        .topbar {
+          top: auto;
+          height: auto;
+          bottom: calc(
+            env(safe-area-inset-bottom) + var(--viewport-bottom-offset)
+          );
+          padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+          background: linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.04),
+            transparent
+          );
+          align-items: stretch;
+          gap: 12px;
+          text-align: left;
+        }
+
+        .brand {
+          align-items: flex-start;
+          width: 100%;
+          text-align: left;
+          gap: 12px;
+        }
+
+        .app-title {
+          font-size: clamp(40px, 18vw, 64px);
+        }
+
+        .app-tagline {
+          display: none;
+        }
+
+        .topbar-row {
+          flex-direction: column;
+          align-items: stretch;
+          width: 100%;
+          gap: 16px;
+        }
+
+        .controls {
+          width: 100%;
+          flex-direction: column;
+        }
+
+        .theme-toggle-fixed {
+          top: 12px;
+          right: 12px;
+        }
+
+        @supports (top: calc(env(safe-area-inset-top) + 12px)) {
+          .theme-toggle-fixed {
+            top: calc(env(safe-area-inset-top) + 12px);
+            right: calc(env(safe-area-inset-right) + 12px);
+          }
+        }
+
+        @supports (top: calc(constant(safe-area-inset-top) + 12px)) {
+          .theme-toggle-fixed {
+            top: calc(constant(safe-area-inset-top) + 12px);
+            right: calc(constant(safe-area-inset-right) + 12px);
+          }
+        }
+
+        main {
+          top: env(safe-area-inset-top);
+        }
+      }
+
+      @media (max-width: 420px) {
+        .topbar {
+          /* height: 80px */
+        }
+
+        textarea#input {
+          font-size: 15px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <button
+      id="btnTheme"
+      class="theme-toggle theme-toggle-fixed"
+      type="button"
+      aria-pressed="false"
+      aria-label="Switch to light mode"
+      title="Switch to light mode"
+    >
+      <span aria-hidden="true">🌙</span>
+    </button>
+    <div class="topbar">
+      <div class="brand">
+        <h1 class="app-title">BigText</h1>
+        <p class="app-tagline">
+          Say it loud. Make every word larger than life.
+        </p>
+      </div>
+      <div class="topbar-row">
+        <div class="controls">
+          <div class="input-stack">
+            <textarea
+              id="input"
+              placeholder="Type something bold. Line breaks are allowed."
+            >
+なにかお困りですか？
+お手伝いしましょうか？</textarea
+            >
+            <div class="edit-actions">
+              <button id="btnView" class="action-button" type="button">
+                View
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-  <main>
-    <canvas id="canvas"></canvas>
-  </main>
-  <div class="view-controls">
-    <button id="btnViewEdit" type="button">Edit</button>
-    <button id="btnSave" type="button">Save</button>
-    <button id="btnSpeak" type="button" title="Speak the text aloud">Speak</button>
-  </div>
+    <main>
+      <canvas id="canvas"></canvas>
+    </main>
+    <div class="view-controls">
+      <button id="btnSave" class="action-button" type="button">Save</button>
+      <button
+        id="btnSpeak"
+        class="action-button"
+        type="button"
+        title="Speak the text aloud"
+      >
+        Speak
+      </button>
+      <button id="btnViewEdit" class="action-button" type="button">Edit</button>
+    </div>
 
-  <script>
-    /* 実用重視。プライベート関数は先頭にアンダースコア */
-    const _canvas = document.getElementById('canvas');
-    const _ctx = _canvas.getContext('2d');
-    const _input = document.getElementById('input');
-    const _btnView = document.getElementById('btnView');
-    const _btnSave = document.getElementById('btnSave');
-    const _btnSpeak = document.getElementById('btnSpeak');
-    const _btnViewEdit = document.getElementById('btnViewEdit');
-    const _btnTheme = document.getElementById('btnTheme');
-    const _topbar = document.querySelector('.topbar');
-    const _viewControls = document.querySelector('.view-controls');
-    const _rootStyle = document.documentElement.style;
-    const _mobileQuery = window.matchMedia('(max-width: 640px)');
-    const _metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    const _prefersDarkQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
+    <script>
+      /* 実用重視。プライベート関数は先頭にアンダースコア */
+      const _canvas = document.getElementById("canvas");
+      const _ctx = _canvas.getContext("2d");
+      const _input = document.getElementById("input");
+      const _btnView = document.getElementById("btnView");
+      const _btnSave = document.getElementById("btnSave");
+      const _btnSpeak = document.getElementById("btnSpeak");
+      const _btnViewEdit = document.getElementById("btnViewEdit");
+      const _btnTheme = document.getElementById("btnTheme");
+      const _topbar = document.querySelector(".topbar");
+      const _viewControls = document.querySelector(".view-controls");
+      const _rootStyle = document.documentElement.style;
+      const _mobileQuery = window.matchMedia("(max-width: 640px)");
+      const _metaThemeColor = document.querySelector(
+        'meta[name="theme-color"]',
+      );
+      const _prefersDarkQuery = window.matchMedia?.(
+        "(prefers-color-scheme: dark)",
+      );
 
-    let _mode = 'edit'; // 'edit' or 'view'
-    let _lastText = _input.value || '';
-    let _devicePixelRatio = Math.max(window.devicePixelRatio || 1, 1);
-    let _theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
-    const _padding = 24; // canvas 内余白
-    const _lineHeightRatioBase = 1.02; // 単一行の行間比
-    const _lineHeightRatioMulti = 1.18; // 複数行時に少し広げる
-    const _fontFamily = 'sans-serif';
+      let _mode = "edit"; // 'edit' or 'view'
+      let _lastText = _input.value || "";
+      let _devicePixelRatio = Math.max(window.devicePixelRatio || 1, 1);
+      let _theme =
+        document.documentElement.dataset.theme === "light" ? "light" : "dark";
+      const _padding = 24; // canvas 内余白
+      const _lineHeightRatioBase = 1.02; // 単一行の行間比
+      const _lineHeightRatioMulti = 1.18; // 複数行時に少し広げる
+      const _fontFamily = "sans-serif";
 
-    function _readStoredTheme() {
-      try {
-        const stored = localStorage.getItem('bigtext-theme');
-        return stored === 'light' || stored === 'dark' ? stored : null;
-      } catch (err) {
-        return null;
-      }
-    }
-
-    function _updateThemeMeta() {
-      if (!_metaThemeColor) return;
-      const styles = getComputedStyle(document.documentElement);
-      const themeColor = styles.getPropertyValue('--bg').trim();
-      if (themeColor) {
-        _metaThemeColor.setAttribute('content', themeColor);
-      }
-    }
-
-    function _refreshThemeToggle() {
-      if (!_btnTheme) return;
-      const isDark = _theme === 'dark';
-      const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
-      _btnTheme.setAttribute('aria-pressed', String(!isDark));
-      _btnTheme.setAttribute('aria-label', label);
-      _btnTheme.title = label;
-      let span = _btnTheme.querySelector('span');
-      if (!span) {
-        span = document.createElement('span');
-        span.setAttribute('aria-hidden', 'true');
-        _btnTheme.appendChild(span);
-      }
-      span.textContent = isDark ? '🌙' : '☀️';
-    }
-
-    function _setTheme(theme, persist = true) {
-      _theme = theme === 'light' ? 'light' : 'dark';
-      document.documentElement.dataset.theme = _theme;
-      if (persist) {
-        try { localStorage.setItem('bigtext-theme', _theme); }
-        catch (err) { /* ignore */ }
-      }
-      _updateThemeMeta();
-      _refreshThemeToggle();
-      if (_mode === 'view') {
-        requestAnimationFrame(_drawText);
-      }
-    }
-
-    function _toggleTheme() {
-      _setTheme(_theme === 'dark' ? 'light' : 'dark');
-    }
-
-    (function initTheme() {
-      const stored = _readStoredTheme();
-      if (stored) {
-        _theme = stored;
-      }
-      _setTheme(_theme, false);
-      if (_prefersDarkQuery) {
-        const handlePrefersChange = e => {
-          if (_readStoredTheme()) return;
-          _setTheme(e.matches ? 'dark' : 'light', false);
-        };
-        if (typeof _prefersDarkQuery.addEventListener === 'function') {
-          _prefersDarkQuery.addEventListener('change', handlePrefersChange);
+      function _readStoredTheme() {
+        try {
+          const stored = localStorage.getItem("bigtext-theme");
+          return stored === "light" || stored === "dark" ? stored : null;
+        } catch (err) {
+          return null;
         }
       }
-    })();
 
-    /* キャンバスリサイズ（高DPI対応） */
-    function _resizeCanvas() {
-      const rect = _canvas.getBoundingClientRect();
-      const w = Math.max(1, Math.floor(rect.width * _devicePixelRatio));
-      const h = Math.max(1, Math.floor(rect.height * _devicePixelRatio));
-      if (_canvas.width !== w || _canvas.height !== h) {
-        _canvas.width = w; _canvas.height = h;
-        _ctx.setTransform(_devicePixelRatio, 0, 0, _devicePixelRatio, 0, 0);
-      }
-    }
-
-    /* テキスト行に分割（改行コードを正規化してから '\n' で分割）。空行はスペース1つに */
-    function _toLines(text) {
-      if (typeof text !== 'string') return [' '];
-      const normalized = text.replace(/\r\n?|\u2028|\u2029/g, '\n'); // CRLF/CR/LS/PS → \n
-      return normalized.split('\n').map(l => l === '' ? ' ' : l);
-    }
-
-    /* 指定フォントサイズでテキストが収まるか判定 */
-    function _fits(fontSize, lines, cw, ch) {
-      _ctx.font = `${fontSize}px ${_fontFamily}`;
-      const maxW = cw - _padding * 2;
-      for (let line of lines) {
-        const m = _ctx.measureText(line);
-        if (m.width > maxW + 1) return false;
-      }
-      let ascent = 0, descent = 0;
-      try {
-        const m = _ctx.measureText(lines[0] || 'M');
-        ascent = m.actualBoundingBoxAscent || fontSize * 0.8;
-        descent = m.actualBoundingBoxDescent || fontSize * 0.2;
-      } catch (e) { ascent = fontSize * 0.8; descent = fontSize * 0.2; }
-      const lineHeightRatio = (lines.length > 1) ? _lineHeightRatioMulti : _lineHeightRatioBase;
-      const lineH = (ascent + descent) * lineHeightRatio;
-      const totalH = lineH * lines.length;
-      return totalH <= (ch - _padding * 2) + 1;
-    }
-
-    /* 最大フォントサイズを二分探索で求める */
-    function _computeMaxFontSize(lines, cw, ch) {
-      if (!lines || lines.length === 0) return 16;
-      let low = 4, high = 4000;
-      if (lines.join('\n').trim() === '') return 48; // 空白のみ
-      for (let i = 0; i < 40; i++) {
-        const mid = Math.floor((low + high) / 2);
-        if (_fits(mid, lines, cw, ch)) low = mid; else high = mid;
-        if (high - low <= 1) break;
-      }
-      return low;
-    }
-
-    /* キャンバスにテキストを描画 */
-    function _drawText() {
-      _resizeCanvas();
-      const rect = _canvas.getBoundingClientRect();
-      const cw = rect.width, ch = rect.height;
-      const lines = _toLines(_lastText);
-      const size = _computeMaxFontSize(lines, cw, ch);
-      _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
-      const g = _ctx.createLinearGradient(0, 0, 0, ch);
-      const styles = getComputedStyle(document.documentElement);
-      g.addColorStop(0, styles.getPropertyValue('--canvas-gradient-start').trim() || '#0b0b0b');
-      g.addColorStop(1, styles.getPropertyValue('--canvas-gradient-end').trim() || '#071018');
-      _ctx.fillStyle = g; _ctx.fillRect(0, 0, cw, ch);
-      _ctx.font = `${size}px ${_fontFamily}`;
-      _ctx.textAlign = 'center'; _ctx.textBaseline = 'alphabetic';
-      let ascent = 0, descent = 0;
-      try { const m = _ctx.measureText(lines[0] || 'M'); ascent = m.actualBoundingBoxAscent || size * 0.8; descent = m.actualBoundingBoxDescent || size * 0.2; }
-      catch (e) { ascent = size * 0.8; descent = size * 0.2; }
-      const lineHeightRatio = (lines.length > 1) ? _lineHeightRatioMulti : _lineHeightRatioBase;
-      const lineH = (ascent + descent) * lineHeightRatio;
-      const totalH = lineH * lines.length;
-      const verticalSpace = Math.max(0, ch - totalH);
-      const startY = verticalSpace * 0.45 + ascent; // 中央より少し上
-      const centerX = cw / 2;
-      _ctx.lineWidth = Math.max(2, Math.floor(size * 0.06));
-      _ctx.strokeStyle = styles.getPropertyValue('--canvas-text-stroke').trim() || 'rgba(0,0,0,0.6)';
-      _ctx.fillStyle = styles.getPropertyValue('--canvas-text-fill').trim() || '#ffffff';
-      for (let i = 0; i < lines.length; i++) {
-        const y = startY + i * lineH;
-        _ctx.strokeText(lines[i], centerX, y);
-        _ctx.fillText(lines[i], centerX, y);
-      }
-    }
-
-    /* ===== レイアウト補助 ===== */
-    function _keyboardOverlap() {
-      if (!window.visualViewport) return 0;
-      const vv = window.visualViewport;
-      const layoutHeight = window.innerHeight;
-      const overlap = layoutHeight - (vv.height + vv.offsetTop);
-      return Math.max(0, overlap);
-    }
-
-    function _updateControlOffsets() {
-      const overlap = _keyboardOverlap();
-      const topbarHeight = (_topbar && typeof _topbar.getBoundingClientRect === 'function') ? _topbar.getBoundingClientRect().height : 0;
-      _rootStyle.setProperty('--topbar-height', `${topbarHeight}px`);
-      _rootStyle.setProperty('--viewport-bottom-offset', `${overlap}px`);
-      if (_mobileQuery.matches && _mode === 'edit') {
-        const stackHeight = topbarHeight + overlap;
-        _rootStyle.setProperty('--controls-stack-height', `${stackHeight}px`);
-      } else {
-        _rootStyle.setProperty('--controls-stack-height', '0px');
-      }
-      if (_mode === 'view' && _viewControls) {
-        const viewRect = _viewControls.getBoundingClientRect();
-        // Extra spacing below view controls (padding in px)
-        const VIEW_CONTROLS_OFFSET_PADDING = 32;
-        const offset = viewRect.height + VIEW_CONTROLS_OFFSET_PADDING;
-        _rootStyle.setProperty('--view-controls-offset', `${offset}px`);
-      } else {
-        _rootStyle.setProperty('--view-controls-offset', '0px');
-      }
-    }
-
-    /* ===== Web Speech API 読み上げ ===== */
-    let _voices = [];
-    let _preferredVoice = null;
-    let _speaking = false;
-    function _refreshVoices() {
-      if (!('speechSynthesis' in window)) return;
-      _voices = speechSynthesis.getVoices();
-      const preferredLangs = [];
-      const navLang = (navigator.language || 'en-US').toLowerCase();
-      preferredLangs.push(navLang);
-      if (!navLang.startsWith('en')) preferredLangs.push('en-US', 'en');
-      preferredLangs.push('ja-JP', 'ja');
-      _preferredVoice = null;
-      for (const lang of preferredLangs) {
-        const match = _voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang));
-        if (match) { _preferredVoice = match; break; }
-      }
-    }
-    function _textForSpeech() {
-      const normalized = (_lastText || '').replace(/\r\n?|\u2028|\u2029/g, '\n');
-      return normalized.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('. ');
-    }
-    function _speak() {
-      if (!('speechSynthesis' in window)) {
-        alert('Speech synthesis is not supported in this browser.');
-        return;
-      }
-      try {
-        speechSynthesis.cancel();
-        if (_speaking) {
-          _speaking = false;
-          _btnSpeak.textContent = 'Speak';
+      function _updateThemeMeta() {
+        if (!_metaThemeColor) return;
+        const styles = getComputedStyle(document.documentElement);
+        const themeColor = styles.getPropertyValue("--bg").trim();
+        if (themeColor) {
+          _metaThemeColor.setAttribute("content", themeColor);
         }
-        const text = _textForSpeech();
-        if (!text) {
-          alert('Enter some text before using speech synthesis.');
+      }
+
+      function _refreshThemeToggle() {
+        if (!_btnTheme) return;
+        const isDark = _theme === "dark";
+        const label = isDark ? "Switch to light mode" : "Switch to dark mode";
+        _btnTheme.setAttribute("aria-pressed", String(!isDark));
+        _btnTheme.setAttribute("aria-label", label);
+        _btnTheme.title = label;
+        let span = _btnTheme.querySelector("span");
+        if (!span) {
+          span = document.createElement("span");
+          span.setAttribute("aria-hidden", "true");
+          _btnTheme.appendChild(span);
+        }
+        span.textContent = isDark ? "🌙" : "☀️";
+      }
+
+      function _setTheme(theme, persist = true) {
+        _theme = theme === "light" ? "light" : "dark";
+        document.documentElement.dataset.theme = _theme;
+        if (persist) {
+          try {
+            localStorage.setItem("bigtext-theme", _theme);
+          } catch (err) {
+            /* ignore */
+          }
+        }
+        _updateThemeMeta();
+        _refreshThemeToggle();
+        if (_mode === "view") {
+          requestAnimationFrame(_drawText);
+        }
+      }
+
+      function _toggleTheme() {
+        _setTheme(_theme === "dark" ? "light" : "dark");
+      }
+
+      (function initTheme() {
+        const stored = _readStoredTheme();
+        if (stored) {
+          _theme = stored;
+        }
+        _setTheme(_theme, false);
+        if (_prefersDarkQuery) {
+          const handlePrefersChange = (e) => {
+            if (_readStoredTheme()) return;
+            _setTheme(e.matches ? "dark" : "light", false);
+          };
+          if (typeof _prefersDarkQuery.addEventListener === "function") {
+            _prefersDarkQuery.addEventListener("change", handlePrefersChange);
+          }
+        }
+      })();
+
+      /* キャンバスリサイズ（高DPI対応） */
+      function _resizeCanvas() {
+        const rect = _canvas.getBoundingClientRect();
+        const w = Math.max(1, Math.floor(rect.width * _devicePixelRatio));
+        const h = Math.max(1, Math.floor(rect.height * _devicePixelRatio));
+        if (_canvas.width !== w || _canvas.height !== h) {
+          _canvas.width = w;
+          _canvas.height = h;
+          _ctx.setTransform(_devicePixelRatio, 0, 0, _devicePixelRatio, 0, 0);
+        }
+      }
+
+      /* テキスト行に分割（改行コードを正規化してから '\n' で分割）。空行はスペース1つに */
+      function _toLines(text) {
+        if (typeof text !== "string") return [" "];
+        const normalized = text.replace(/\r\n?|\u2028|\u2029/g, "\n"); // CRLF/CR/LS/PS → \n
+        return normalized.split("\n").map((l) => (l === "" ? " " : l));
+      }
+
+      /* 指定フォントサイズでテキストが収まるか判定 */
+      function _fits(fontSize, lines, cw, ch) {
+        _ctx.font = `${fontSize}px ${_fontFamily}`;
+        const maxW = cw - _padding * 2;
+        for (let line of lines) {
+          const m = _ctx.measureText(line);
+          if (m.width > maxW + 1) return false;
+        }
+        let ascent = 0,
+          descent = 0;
+        try {
+          const m = _ctx.measureText(lines[0] || "M");
+          ascent = m.actualBoundingBoxAscent || fontSize * 0.8;
+          descent = m.actualBoundingBoxDescent || fontSize * 0.2;
+        } catch (e) {
+          ascent = fontSize * 0.8;
+          descent = fontSize * 0.2;
+        }
+        const lineHeightRatio =
+          lines.length > 1 ? _lineHeightRatioMulti : _lineHeightRatioBase;
+        const lineH = (ascent + descent) * lineHeightRatio;
+        const totalH = lineH * lines.length;
+        return totalH <= ch - _padding * 2 + 1;
+      }
+
+      /* 最大フォントサイズを二分探索で求める */
+      function _computeMaxFontSize(lines, cw, ch) {
+        if (!lines || lines.length === 0) return 16;
+        let low = 4,
+          high = 4000;
+        if (lines.join("\n").trim() === "") return 48; // 空白のみ
+        for (let i = 0; i < 40; i++) {
+          const mid = Math.floor((low + high) / 2);
+          if (_fits(mid, lines, cw, ch)) low = mid;
+          else high = mid;
+          if (high - low <= 1) break;
+        }
+        return low;
+      }
+
+      /* キャンバスにテキストを描画 */
+      function _drawText() {
+        _resizeCanvas();
+        const rect = _canvas.getBoundingClientRect();
+        const cw = rect.width,
+          ch = rect.height;
+        const lines = _toLines(_lastText);
+        const size = _computeMaxFontSize(lines, cw, ch);
+        _ctx.clearRect(
+          0,
+          0,
+          _canvas.width / _devicePixelRatio,
+          _canvas.height / _devicePixelRatio,
+        );
+        const g = _ctx.createLinearGradient(0, 0, 0, ch);
+        const styles = getComputedStyle(document.documentElement);
+        g.addColorStop(
+          0,
+          styles.getPropertyValue("--canvas-gradient-start").trim() ||
+            "#0b0b0b",
+        );
+        g.addColorStop(
+          1,
+          styles.getPropertyValue("--canvas-gradient-end").trim() || "#071018",
+        );
+        _ctx.fillStyle = g;
+        _ctx.fillRect(0, 0, cw, ch);
+        _ctx.font = `${size}px ${_fontFamily}`;
+        _ctx.textAlign = "center";
+        _ctx.textBaseline = "alphabetic";
+        let ascent = 0,
+          descent = 0;
+        try {
+          const m = _ctx.measureText(lines[0] || "M");
+          ascent = m.actualBoundingBoxAscent || size * 0.8;
+          descent = m.actualBoundingBoxDescent || size * 0.2;
+        } catch (e) {
+          ascent = size * 0.8;
+          descent = size * 0.2;
+        }
+        const lineHeightRatio =
+          lines.length > 1 ? _lineHeightRatioMulti : _lineHeightRatioBase;
+        const lineH = (ascent + descent) * lineHeightRatio;
+        const totalH = lineH * lines.length;
+        const verticalSpace = Math.max(0, ch - totalH);
+        const startY = verticalSpace * 0.45 + ascent; // 中央より少し上
+        const centerX = cw / 2;
+        _ctx.lineWidth = Math.max(2, Math.floor(size * 0.06));
+        _ctx.strokeStyle =
+          styles.getPropertyValue("--canvas-text-stroke").trim() ||
+          "rgba(0,0,0,0.6)";
+        _ctx.fillStyle =
+          styles.getPropertyValue("--canvas-text-fill").trim() || "#ffffff";
+        for (let i = 0; i < lines.length; i++) {
+          const y = startY + i * lineH;
+          _ctx.strokeText(lines[i], centerX, y);
+          _ctx.fillText(lines[i], centerX, y);
+        }
+      }
+
+      /* ===== レイアウト補助 ===== */
+      function _keyboardOverlap() {
+        if (!window.visualViewport) return 0;
+        const vv = window.visualViewport;
+        const layoutHeight = window.innerHeight;
+        const overlap = layoutHeight - (vv.height + vv.offsetTop);
+        return Math.max(0, overlap);
+      }
+
+      function _updateControlOffsets() {
+        const overlap = _keyboardOverlap();
+        const topbarHeight =
+          _topbar && typeof _topbar.getBoundingClientRect === "function"
+            ? _topbar.getBoundingClientRect().height
+            : 0;
+        _rootStyle.setProperty("--topbar-height", `${topbarHeight}px`);
+        _rootStyle.setProperty("--viewport-bottom-offset", `${overlap}px`);
+        if (_mobileQuery.matches && _mode === "edit") {
+          const stackHeight = topbarHeight + overlap;
+          _rootStyle.setProperty("--controls-stack-height", `${stackHeight}px`);
+        } else {
+          _rootStyle.setProperty("--controls-stack-height", "0px");
+        }
+        if (_mode === "view" && _viewControls) {
+          const viewRect = _viewControls.getBoundingClientRect();
+          // Extra spacing below view controls (padding in px)
+          const VIEW_CONTROLS_OFFSET_PADDING = 32;
+          const offset = viewRect.height + VIEW_CONTROLS_OFFSET_PADDING;
+          _rootStyle.setProperty("--view-controls-offset", `${offset}px`);
+        } else {
+          _rootStyle.setProperty("--view-controls-offset", "0px");
+        }
+      }
+
+      /* ===== Web Speech API 読み上げ ===== */
+      let _voices = [];
+      let _preferredVoice = null;
+      let _speaking = false;
+      function _refreshVoices() {
+        if (!("speechSynthesis" in window)) return;
+        _voices = speechSynthesis.getVoices();
+        const preferredLangs = [];
+        const navLang = (navigator.language || "en-US").toLowerCase();
+        preferredLangs.push(navLang);
+        if (!navLang.startsWith("en")) preferredLangs.push("en-US", "en");
+        preferredLangs.push("ja-JP", "ja");
+        _preferredVoice = null;
+        for (const lang of preferredLangs) {
+          const match = _voices.find(
+            (v) => v.lang && v.lang.toLowerCase().startsWith(lang),
+          );
+          if (match) {
+            _preferredVoice = match;
+            break;
+          }
+        }
+      }
+      function _textForSpeech() {
+        const normalized = (_lastText || "").replace(
+          /\r\n?|\u2028|\u2029/g,
+          "\n",
+        );
+        return normalized
+          .split("\n")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0)
+          .join(". ");
+      }
+      function _speak() {
+        if (!("speechSynthesis" in window)) {
+          alert("Speech synthesis is not supported in this browser.");
           return;
         }
-        const u = new SpeechSynthesisUtterance(text);
-        if (_preferredVoice) { u.voice = _preferredVoice; u.lang = _preferredVoice.lang; }
-        else { u.lang = navigator.language || 'en-US'; }
-        u.rate = 1.0; u.pitch = 1.0;
-        u.onstart = () => { _speaking = true; _btnSpeak.textContent = 'Stop'; };
-        u.onend = () => { _speaking = false; _btnSpeak.textContent = 'Speak'; };
-        u.onerror = () => { _speaking = false; _btnSpeak.textContent = 'Speak'; };
-        speechSynthesis.speak(u);
-      } catch (err) {
-        console.error('Speech synthesis failed:', err);
-        alert('Speech synthesis is blocked. Please open this page over HTTPS in a regular browser tab.');
+        try {
+          speechSynthesis.cancel();
+          if (_speaking) {
+            _speaking = false;
+            _btnSpeak.textContent = "Speak";
+          }
+          const text = _textForSpeech();
+          if (!text) {
+            alert("Enter some text before using speech synthesis.");
+            return;
+          }
+          const u = new SpeechSynthesisUtterance(text);
+          if (_preferredVoice) {
+            u.voice = _preferredVoice;
+            u.lang = _preferredVoice.lang;
+          } else {
+            u.lang = navigator.language || "en-US";
+          }
+          u.rate = 1.0;
+          u.pitch = 1.0;
+          u.onstart = () => {
+            _speaking = true;
+            _btnSpeak.textContent = "Stop";
+          };
+          u.onend = () => {
+            _speaking = false;
+            _btnSpeak.textContent = "Speak";
+          };
+          u.onerror = () => {
+            _speaking = false;
+            _btnSpeak.textContent = "Speak";
+          };
+          speechSynthesis.speak(u);
+        } catch (err) {
+          console.error("Speech synthesis failed:", err);
+          alert(
+            "Speech synthesis is blocked. Please open this page over HTTPS in a regular browser tab.",
+          );
+        }
       }
-    }
-    function _toggleSpeak() {
-      if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = 'Speak'; }
-      else { _speak(); }
-    }
-
-    /* ====== ファイル名生成（空白・改行→アンダースコア、拡張子は .png）====== */
-    function _buildFileName(raw) {
-      let s = String(raw ?? '');
-      // 改行系を \n に統一
-      s = s.replace(/\r\n?|\u2028|\u2029/g, '\n');
-      // 半角/全角スペース・タブ・改行をアンダースコアに（1対1変換）
-      s = s.replace(/[\u0020\u3000\t\n\r]/g, '_');
-      // OSで不正になりうる文字は安全側で _ に
-      s = s.replace(/[\\\/:\*?"<>\|#%]/g, '_');
-      // 空なら既定名
-      if (s.length === 0 || /^_*$/.test(s)) s = 'image';
-      // 末尾に拡張子
-      if (!/\.png$/i.test(s)) s += '.png';
-      return s;
-    }
-
-    /* PNG 保存（Blobを直接ダウンロード） */
-    function _savePNG() {
-      const textNow = (_mode === 'view') ? _lastText : _input.value;
-      const fileName = _buildFileName(textNow);
-      if (_mode === 'view') _drawText(); else { _lastText = textNow; _drawText(); }
-      _canvas.toBlob(blob => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName; // 指定どおり、文字列そのまま（空白・改行は_）+ .png
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url); // 即時解放（ブロックされにくい）
-      }, 'image/png');
-    }
-
-    /* モード切替 */
-    function _enterView() {
-      _mode = 'view';
-      document.body.classList.add('view-mode');
-      _topbar.style.display = 'none';
-      _btnView.textContent = 'Edit';
-      _lastText = _input.value;
-      _drawText();
-      _canvas.addEventListener('click', _onCanvasClickToEdit);
-      _btnSpeak.textContent = _speaking ? 'Stop' : 'Speak';
-      _updateControlOffsets();
-    }
-    function _enterEdit() {
-      _mode = 'edit';
-      document.body.classList.remove('view-mode');
-      _topbar.style.display = 'flex';
-      _btnView.textContent = 'View';
-      _canvas.removeEventListener('click', _onCanvasClickToEdit);
-      if (_speaking) { speechSynthesis.cancel(); _speaking = false; }
-      _btnSpeak.textContent = 'Speak';
-      // Clear canvas in edit mode
-      _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
-      requestAnimationFrame(_updateControlOffsets);
-    }
-    function _onCanvasClickToEdit() { _enterEdit(); }
-
-    /* イベント */
-    _btnView.addEventListener('click', () => { if (_mode === 'edit') _enterView(); else _enterEdit(); });
-    _btnSave.addEventListener('click', _savePNG);
-    _btnSpeak.addEventListener('click', _toggleSpeak);
-    if (_btnViewEdit) { _btnViewEdit.addEventListener('click', _enterEdit); }
-    _btnTheme?.addEventListener('click', _toggleTheme);
-    _input.addEventListener('input', () => {
-      _lastText = _input.value;
-      if (_mode === 'view') _drawText();
-      requestAnimationFrame(_updateControlOffsets);
-    });
-    window.addEventListener('resize', () => {
-      _updateControlOffsets();
-      if (_mode === 'view') requestAnimationFrame(_drawText);
-    });
-    window.addEventListener('orientationchange', () => {
-      setTimeout(() => {
-        _updateControlOffsets();
-        if (_mode === 'view') _drawText();
-      }, 120);
-    });
-    window.speechSynthesis?.addEventListener('voiceschanged', _refreshVoices);
-
-    /* --- 簡易セルフテスト --- */
-    function _assert(name, cond) { if (!cond) { console.error('[TEST FAIL]', name); } else { console.log('%c[TEST PASS]', 'color:#4ade80', name); } }
-    function _runSelfTests() {
-      console.group('Self Tests');
-      _assert('toLines basic', JSON.stringify(_toLines('a\nb')) === JSON.stringify(['a', 'b']));
-      _assert('toLines CRLF', JSON.stringify(_toLines('a\r\nb')) === JSON.stringify(['a', 'b']));
-      _assert('toLines CR', JSON.stringify(_toLines('a\rb')) === JSON.stringify(['a', 'b']));
-      _assert('toLines keep empty', JSON.stringify(_toLines('a\n\nb')) === JSON.stringify(['a', ' ', 'b']));
-      _assert('toLines non-string', _toLines(null).length === 1 && _toLines(null)[0] === ' ');
-      // 追加テスト: ファイル名
-      _assert('buildFileName newline/space', _buildFileName('あ い\nう').startsWith('あ_い_う') && _buildFileName('あ い\nう').endsWith('.png'));
-      _assert('buildFileName forbidden chars', _buildFileName('a/b\\c').indexOf('/') === -1 && _buildFileName('a/b\\c').indexOf('\\') === -1);
-      _assert('buildFileName empty -> image.png', _buildFileName('   ').toLowerCase() === 'image.png');
-      console.groupEnd();
-    }
-
-    /* 初期セットアップ */
-    (function _init() {
-      function _fitCanvasToParent() {
-        const mainRect = document.querySelector('main').getBoundingClientRect();
-        _canvas.style.width = mainRect.width + 'px';
-        _canvas.style.height = mainRect.height + 'px';
-        _resizeCanvas();
-      }
-      
-      // Visual Viewport API for iOS keyboard handling
-      function _handleVisualViewportChange() {
-        _updateControlOffsets();
-        if (_mode === 'view') {
-          _fitCanvasToParent();
-          _drawText();
+      function _toggleSpeak() {
+        if (_speaking) {
+          speechSynthesis.cancel();
+          _speaking = false;
+          _btnSpeak.textContent = "Speak";
+        } else {
+          _speak();
         }
       }
 
-      window.addEventListener('load', () => { _fitCanvasToParent(); _updateControlOffsets(); });
-      window.addEventListener('resize', () => { _fitCanvasToParent(); _updateControlOffsets(); });
-
-      // Add visual viewport support for iOS keyboard
-      if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', _handleVisualViewportChange);
-        window.visualViewport.addEventListener('scroll', _handleVisualViewportChange);
+      /* ====== ファイル名生成（空白・改行→アンダースコア、拡張子は .png）====== */
+      function _buildFileName(raw) {
+        let s = String(raw ?? "");
+        // 改行系を \n に統一
+        s = s.replace(/\r\n?|\u2028|\u2029/g, "\n");
+        // 半角/全角スペース・タブ・改行をアンダースコアに（1対1変換）
+        s = s.replace(/[\u0020\u3000\t\n\r]/g, "_");
+        // OSで不正になりうる文字は安全側で _ に
+        s = s.replace(/[\\\/:\*?"<>\|#%]/g, "_");
+        // 空なら既定名
+        if (s.length === 0 || /^_*$/.test(s)) s = "image";
+        // 末尾に拡張子
+        if (!/\.png$/i.test(s)) s += ".png";
+        return s;
       }
 
-      const _onMediaChange = () => {
+      /* PNG 保存（Blobを直接ダウンロード） */
+      function _savePNG() {
+        const textNow = _mode === "view" ? _lastText : _input.value;
+        const fileName = _buildFileName(textNow);
+        if (_mode === "view") _drawText();
+        else {
+          _lastText = textNow;
+          _drawText();
+        }
+        _canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName; // 指定どおり、文字列そのまま（空白・改行は_）+ .png
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url); // 即時解放（ブロックされにくい）
+        }, "image/png");
+      }
+
+      /* モード切替 */
+      function _enterView() {
+        _mode = "view";
+        document.body.classList.add("view-mode");
+        _topbar.style.display = "none";
+        _btnView.textContent = "Edit";
+        _lastText = _input.value;
+        _drawText();
+        _canvas.addEventListener("click", _onCanvasClickToEdit);
+        _btnSpeak.textContent = _speaking ? "Stop" : "Speak";
         _updateControlOffsets();
-        _fitCanvasToParent();
-        if (_mode === 'view') _drawText();
-      };
-      if (_mobileQuery.addEventListener) _mobileQuery.addEventListener('change', _onMediaChange);
-      else if (_mobileQuery.addListener) _mobileQuery.addListener(_onMediaChange);
-
-      _fitCanvasToParent();
-      _enterEdit();
-      _runSelfTests();
-      _refreshVoices();
-      if (!('speechSynthesis' in window)) {
-        _btnSpeak.disabled = true;
-        _btnSpeak.title = 'Speech synthesis is not supported in this browser.';
+      }
+      function _enterEdit() {
+        _mode = "edit";
+        document.body.classList.remove("view-mode");
+        _topbar.style.display = "flex";
+        _btnView.textContent = "View";
+        _canvas.removeEventListener("click", _onCanvasClickToEdit);
+        if (_speaking) {
+          speechSynthesis.cancel();
+          _speaking = false;
+        }
+        _btnSpeak.textContent = "Speak";
+        // Clear canvas in edit mode
+        _ctx.clearRect(
+          0,
+          0,
+          _canvas.width / _devicePixelRatio,
+          _canvas.height / _devicePixelRatio,
+        );
+        requestAnimationFrame(_updateControlOffsets);
+      }
+      function _onCanvasClickToEdit() {
+        _enterEdit();
       }
 
-      // Register service worker for PWA
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(registration => {
-              console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-              console.log('SW registration failed: ', registrationError);
-            });
+      /* イベント */
+      _btnView.addEventListener("click", () => {
+        if (_mode === "edit") _enterView();
+        else _enterEdit();
+      });
+      _btnSave.addEventListener("click", _savePNG);
+      _btnSpeak.addEventListener("click", _toggleSpeak);
+      if (_btnViewEdit) {
+        _btnViewEdit.addEventListener("click", _enterEdit);
+      }
+      _btnTheme?.addEventListener("click", _toggleTheme);
+      _input.addEventListener("input", () => {
+        _lastText = _input.value;
+        if (_mode === "view") _drawText();
+        requestAnimationFrame(_updateControlOffsets);
+      });
+      window.addEventListener("resize", () => {
+        _updateControlOffsets();
+        if (_mode === "view") requestAnimationFrame(_drawText);
+      });
+      window.addEventListener("orientationchange", () => {
+        setTimeout(() => {
+          _updateControlOffsets();
+          if (_mode === "view") _drawText();
+        }, 120);
+      });
+      window.speechSynthesis?.addEventListener("voiceschanged", _refreshVoices);
+
+      /* --- 簡易セルフテスト --- */
+      function _assert(name, cond) {
+        if (!cond) {
+          console.error("[TEST FAIL]", name);
+        } else {
+          console.log("%c[TEST PASS]", "color:#4ade80", name);
+        }
+      }
+      function _runSelfTests() {
+        console.group("Self Tests");
+        _assert(
+          "toLines basic",
+          JSON.stringify(_toLines("a\nb")) === JSON.stringify(["a", "b"]),
+        );
+        _assert(
+          "toLines CRLF",
+          JSON.stringify(_toLines("a\r\nb")) === JSON.stringify(["a", "b"]),
+        );
+        _assert(
+          "toLines CR",
+          JSON.stringify(_toLines("a\rb")) === JSON.stringify(["a", "b"]),
+        );
+        _assert(
+          "toLines keep empty",
+          JSON.stringify(_toLines("a\n\nb")) ===
+            JSON.stringify(["a", " ", "b"]),
+        );
+        _assert(
+          "toLines non-string",
+          _toLines(null).length === 1 && _toLines(null)[0] === " ",
+        );
+        // 追加テスト: ファイル名
+        _assert(
+          "buildFileName newline/space",
+          _buildFileName("あ い\nう").startsWith("あ_い_う") &&
+            _buildFileName("あ い\nう").endsWith(".png"),
+        );
+        _assert(
+          "buildFileName forbidden chars",
+          _buildFileName("a/b\\c").indexOf("/") === -1 &&
+            _buildFileName("a/b\\c").indexOf("\\") === -1,
+        );
+        _assert(
+          "buildFileName empty -> image.png",
+          _buildFileName("   ").toLowerCase() === "image.png",
+        );
+        console.groupEnd();
+      }
+
+      /* 初期セットアップ */
+      (function _init() {
+        function _fitCanvasToParent() {
+          const mainRect = document
+            .querySelector("main")
+            .getBoundingClientRect();
+          _canvas.style.width = mainRect.width + "px";
+          _canvas.style.height = mainRect.height + "px";
+          _resizeCanvas();
+        }
+
+        // Visual Viewport API for iOS keyboard handling
+        function _handleVisualViewportChange() {
+          _updateControlOffsets();
+          if (_mode === "view") {
+            _fitCanvasToParent();
+            _drawText();
+          }
+        }
+
+        window.addEventListener("load", () => {
+          _fitCanvasToParent();
+          _updateControlOffsets();
         });
-      }
-    })();
-  </script>
-</body>
+        window.addEventListener("resize", () => {
+          _fitCanvasToParent();
+          _updateControlOffsets();
+        });
 
+        // Add visual viewport support for iOS keyboard
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener(
+            "resize",
+            _handleVisualViewportChange,
+          );
+          window.visualViewport.addEventListener(
+            "scroll",
+            _handleVisualViewportChange,
+          );
+        }
+
+        const _onMediaChange = () => {
+          _updateControlOffsets();
+          _fitCanvasToParent();
+          if (_mode === "view") _drawText();
+        };
+        if (_mobileQuery.addEventListener)
+          _mobileQuery.addEventListener("change", _onMediaChange);
+        else if (_mobileQuery.addListener)
+          _mobileQuery.addListener(_onMediaChange);
+
+        _fitCanvasToParent();
+        _enterEdit();
+        _runSelfTests();
+        _refreshVoices();
+        if (!("speechSynthesis" in window)) {
+          _btnSpeak.disabled = true;
+          _btnSpeak.title =
+            "Speech synthesis is not supported in this browser.";
+        }
+
+        // Register service worker for PWA
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker
+              .register("./sw.js")
+              .then((registration) => {
+                console.log("SW registered: ", registration);
+              })
+              .catch((registrationError) => {
+                console.log("SW registration failed: ", registrationError);
+              });
+          });
+        }
+      })();
+    </script>
+  </body>
 </html>
