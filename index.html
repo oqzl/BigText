@@ -596,7 +596,7 @@ Make it unforgettable.</textarea>
 
     function _updateControlOffsets() {
       const overlap = _keyboardOverlap();
-      const topbarHeight = _topbar ? _topbar.getBoundingClientRect().height : 0;
+      const topbarHeight = (_topbar && typeof _topbar.getBoundingClientRect === 'function') ? _topbar.getBoundingClientRect().height : 0;
       _rootStyle.setProperty('--topbar-height', `${topbarHeight}px`);
       _rootStyle.setProperty('--viewport-bottom-offset', `${overlap}px`);
       if (_mobileQuery.matches && _mode === 'edit') {
