@@ -351,14 +351,14 @@
         right: 12px;
       }
 
-      @supports (top: calc(env(safe-area-inset-top) + 12px)) {
+      @supports (top: env(safe-area-inset-top)) {
         .theme-toggle-fixed {
           top: calc(env(safe-area-inset-top) + 12px);
           right: calc(env(safe-area-inset-right) + 12px);
         }
       }
 
-      @supports (top: calc(constant(safe-area-inset-top) + 12px)) {
+      @supports (top: constant(safe-area-inset-top)) {
         .theme-toggle-fixed {
           top: calc(constant(safe-area-inset-top) + 12px);
           right: calc(constant(safe-area-inset-right) + 12px);
