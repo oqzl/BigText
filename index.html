@@ -575,7 +575,7 @@ Make it unforgettable.</textarea>
       const size = _computeMaxFontSize(lines, cw, ch);
       _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
       const g = _ctx.createLinearGradient(0, 0, 0, ch);
-      const styles = _cachedStyles;
+      const styles = getComputedStyle(document.documentElement);
       g.addColorStop(0, styles.getPropertyValue('--canvas-gradient-start').trim() || '#0b0b0b');
       g.addColorStop(1, styles.getPropertyValue('--canvas-gradient-end').trim() || '#071018');
       _ctx.fillStyle = g; _ctx.fillRect(0, 0, cw, ch);
