@@ -607,7 +607,9 @@ Make it unforgettable.</textarea>
       }
       if (_mode === 'view' && _viewControls) {
         const viewRect = _viewControls.getBoundingClientRect();
-        const offset = viewRect.height + 32;
+        // Extra spacing below view controls (padding in px)
+        const VIEW_CONTROLS_OFFSET_PADDING = 32;
+        const offset = viewRect.height + VIEW_CONTROLS_OFFSET_PADDING;
         _rootStyle.setProperty('--view-controls-offset', `${offset}px`);
       } else {
         _rootStyle.setProperty('--view-controls-offset', '0px');
