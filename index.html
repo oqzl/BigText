@@ -744,7 +744,7 @@ Make it unforgettable.</textarea>
     _btnView.addEventListener('click', () => { if (_mode === 'edit') _enterView(); else _enterEdit(); });
     _btnSave.addEventListener('click', _savePNG);
     _btnSpeak.addEventListener('click', _toggleSpeak);
-    if (_btnViewEdit) { _btnViewEdit.addEventListener('click', _enterEdit); }
+    _btnViewEdit.addEventListener('click', _enterEdit);
     _btnTheme?.addEventListener('click', _toggleTheme);
     _input.addEventListener('input', () => {
       _lastText = _input.value;
