@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 
 <head>
   <meta charset="utf-8" />
@@ -21,15 +21,62 @@
   
   <!-- Theme color -->
   <meta name="theme-color" content="#0b0b0b" />
+  <script>
+    (function () {
+      try {
+        const stored = localStorage.getItem('bigtext-theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const initial = stored === 'light' || stored === 'dark' ? stored : (prefersDark ? 'dark' : 'light');
+        document.documentElement.dataset.theme = initial;
+      } catch (err) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    })();
+  </script>
   <style>
     :root {
+      color-scheme: dark;
       --bg: #0b0b0b;
-      --ui: #0f1720;
-      --fg: #fff;
+      --fg: #ffffff;
       --muted: #9aa4b2;
+      --surface: rgba(255, 255, 255, 0.02);
+      --surface-strong: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --shadow-strong: rgba(0, 0, 0, 0.35);
+      --float-shadow: rgba(0, 0, 0, 0.25);
+      --tagline: rgba(255, 255, 255, 0.72);
+      --speak-color: #e5e7eb;
+      --canvas-gradient-start: #0b0b0b;
+      --canvas-gradient-end: #071018;
+      --canvas-text-fill: #ffffff;
+      --canvas-text-stroke: rgba(0, 0, 0, 0.6);
+      --topbar-gradient-start: rgba(255, 255, 255, 0.02);
+      --brand-shadow: rgba(15, 23, 42, 0.45);
       --viewport-bottom-offset: 0px;
       --controls-stack-height: 0px;
       --topbar-height: 72px;
+    }
+
+    :root[data-theme='light'] {
+      color-scheme: light;
+      --bg: #f3f5fa;
+      --fg: #0f172a;
+      --muted: #4b5563;
+      --surface: rgba(15, 23, 42, 0.04);
+      --surface-strong: rgba(148, 163, 184, 0.16);
+      --border: rgba(148, 163, 184, 0.4);
+      --border-strong: rgba(100, 116, 139, 0.45);
+      --shadow-strong: rgba(148, 163, 184, 0.45);
+      --float-shadow: rgba(148, 163, 184, 0.35);
+      --tagline: rgba(30, 41, 59, 0.72);
+      --speak-color: #1f2937;
+      --canvas-gradient-start: #f8fafc;
+      --canvas-gradient-end: #e0f2fe;
+      --canvas-text-fill: #0f172a;
+      --canvas-text-stroke: rgba(148, 163, 184, 0.6);
+      --topbar-gradient-start: rgba(148, 163, 184, 0.16);
+      --brand-shadow: rgba(148, 163, 184, 0.4);
     }
 
     html,
@@ -38,7 +85,8 @@
       margin: 0;
       font-family: system-ui, -apple-system, "Noto Sans JP", "Hiragino Kaku Gothic ProN", "メイリオ", sans-serif;
       background: var(--bg);
-      color: var(--fg)
+      color: var(--fg);
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     .topbar {
@@ -51,7 +99,7 @@
       align-items: center;
       gap: 24px;
       padding: clamp(32px, 8vw, 96px) 24px 24px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+      background: linear-gradient(180deg, var(--topbar-gradient-start), transparent);
       text-align: center;
       backdrop-filter: blur(14px);
       box-sizing: border-box;
@@ -71,21 +119,22 @@
       border-radius: 32px;
       display: grid;
       place-items: center;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+      background: linear-gradient(135deg, var(--surface-strong), transparent);
+      box-shadow: inset 0 0 0 1px var(--border-strong);
     }
 
     .brand-logo img {
       width: 60%;
       height: auto;
-      filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.35));
+      filter: drop-shadow(0 4px 16px var(--brand-shadow));
     }
 
     .topbar-row {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 12px;
       width: min(960px, 100%);
+      justify-content: space-between;
     }
 
     .app-title {
@@ -95,14 +144,14 @@
       font-weight: 200;
       letter-spacing: -0.01em;
       color: var(--fg);
-      text-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+      text-shadow: 0 16px 36px var(--shadow-strong);
     }
 
     .app-tagline {
       margin: 0;
       font-size: clamp(16px, 2.6vw, 24px);
       font-weight: 500;
-      color: rgba(255, 255, 255, 0.72);
+      color: var(--tagline);
       letter-spacing: 0.02em;
     }
 
@@ -126,20 +175,22 @@
       max-height: 160px;
       border-radius: 8px;
       padding: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      background: var(--surface);
       color: var(--fg);
       resize: vertical;
-      font-size: 16px
+      font-size: 16px;
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     }
 
     button {
       background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
       color: var(--muted);
       padding: 8px 10px;
       border-radius: 8px;
-      font-size: 14px
+      font-size: 14px;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
     }
 
     .secondary-actions {
@@ -165,6 +216,27 @@
     .actions {
       display: flex;
       gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .theme-toggle {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      padding: 0;
+      border-radius: 12px;
+    }
+
+    .theme-toggle span {
+      line-height: 1;
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
     }
 
     main {
@@ -202,9 +274,9 @@
     }
 
     .speak {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 255, 255, 0.12);
-      color: #e5e7eb;
+      background: var(--surface-strong);
+      border-color: var(--border-strong);
+      color: var(--speak-color);
       padding: 10px 16px;
       border-radius: 9999px;
       font-size: 14px;
@@ -216,7 +288,7 @@
     }
 
     .speak.floating {
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 10px 30px var(--float-shadow);
     }
 
     body.view-mode main {
@@ -236,6 +308,26 @@
       }
 
       .brand {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        justify-items: start;
+        width: 100%;
+        text-align: left;
+        gap: 12px;
+      }
+
+      .brand-logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 20px;
+      }
+
+      .app-title {
+        font-size: clamp(32px, 12vw, 44px);
+      }
+
+      .app-tagline {
         display: none;
       }
 
@@ -243,6 +335,7 @@
         flex-direction: column;
         align-items: stretch;
         width: 100%;
+        gap: 16px;
       }
 
       .controls {
@@ -254,7 +347,7 @@
         width: 100%;
       }
 
-      .actions button {
+      .actions button:not(.theme-toggle) {
         flex: 1;
       }
 
@@ -281,7 +374,7 @@
       }
 
       textarea#input {
-        font-size: 15px
+        font-size: 15px;
       }
     }
   </style>
@@ -311,6 +404,9 @@ Make it unforgettable.</textarea>
       <div class="actions">
         <button id="btnView" type="button">View</button>
         <button id="btnSave" type="button">Save PNG</button>
+        <button id="btnTheme" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to light mode" title="Switch to light mode">
+          <span aria-hidden="true">🌙</span>
+        </button>
       </div>
     </div>
   </div>
@@ -330,6 +426,7 @@ Make it unforgettable.</textarea>
     const _btnSave = document.getElementById('btnSave');
     const _btnSpeak = document.getElementById('btnSpeak');
     const _btnHint = document.getElementById('btnHint');
+    const _btnTheme = document.getElementById('btnTheme');
     const _topbar = document.querySelector('.topbar');
     const _secondaryActions = document.querySelector('.secondary-actions');
     const _hintMessage = document.getElementById('hintMessage');
@@ -337,14 +434,86 @@ Make it unforgettable.</textarea>
     const _hintLabel = document.querySelector('.hint');
     const _rootStyle = document.documentElement.style;
     const _mobileQuery = window.matchMedia('(max-width: 640px)');
+    const _metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    const _prefersDarkQuery = window.matchMedia?.('(prefers-color-scheme: dark)');
 
     let _mode = 'edit'; // 'edit' or 'view'
     let _lastText = _input.value || '';
     let _devicePixelRatio = Math.max(window.devicePixelRatio || 1, 1);
+    let _theme = document.documentElement.dataset.theme === 'light' ? 'light' : 'dark';
     const _padding = 24; // canvas 内余白
     const _lineHeightRatioBase = 1.02; // 単一行の行間比
     const _lineHeightRatioMulti = 1.18; // 複数行時に少し広げる
     const _fontFamily = 'sans-serif';
+
+    function _readStoredTheme() {
+      try {
+        const stored = localStorage.getItem('bigtext-theme');
+        return stored === 'light' || stored === 'dark' ? stored : null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function _updateThemeMeta() {
+      if (!_metaThemeColor) return;
+      const styles = getComputedStyle(document.documentElement);
+      const themeColor = styles.getPropertyValue('--bg').trim();
+      if (themeColor) {
+        _metaThemeColor.setAttribute('content', themeColor);
+      }
+    }
+
+    function _refreshThemeToggle() {
+      if (!_btnTheme) return;
+      const isDark = _theme === 'dark';
+      const label = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+      _btnTheme.setAttribute('aria-pressed', String(!isDark));
+      _btnTheme.setAttribute('aria-label', label);
+      _btnTheme.title = label;
+      let span = _btnTheme.querySelector('span');
+      if (!span) {
+        span = document.createElement('span');
+        span.setAttribute('aria-hidden', 'true');
+        _btnTheme.appendChild(span);
+      }
+      span.textContent = isDark ? '🌙' : '☀️';
+    }
+
+    function _setTheme(theme, persist = true) {
+      _theme = theme === 'light' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = _theme;
+      if (persist) {
+        try { localStorage.setItem('bigtext-theme', _theme); }
+        catch (err) { /* ignore */ }
+      }
+      _updateThemeMeta();
+      _refreshThemeToggle();
+      if (_mode === 'view') {
+        requestAnimationFrame(_drawText);
+      }
+    }
+
+    function _toggleTheme() {
+      _setTheme(_theme === 'dark' ? 'light' : 'dark');
+    }
+
+    (function initTheme() {
+      const stored = _readStoredTheme();
+      if (stored) {
+        _theme = stored;
+      }
+      _setTheme(_theme, false);
+      if (_prefersDarkQuery) {
+        const handlePrefersChange = e => {
+          if (_readStoredTheme()) return;
+          _setTheme(e.matches ? 'dark' : 'light', false);
+        };
+        if (typeof _prefersDarkQuery.addEventListener === 'function') {
+          _prefersDarkQuery.addEventListener('change', handlePrefersChange);
+        }
+      }
+    })();
 
     /* キャンバスリサイズ（高DPI対応） */
     function _resizeCanvas() {
@@ -406,7 +575,9 @@ Make it unforgettable.</textarea>
       const size = _computeMaxFontSize(lines, cw, ch);
       _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
       const g = _ctx.createLinearGradient(0, 0, 0, ch);
-      g.addColorStop(0, '#0b0b0b'); g.addColorStop(1, '#071018');
+      const styles = _cachedStyles;
+      g.addColorStop(0, styles.getPropertyValue('--canvas-gradient-start').trim() || '#0b0b0b');
+      g.addColorStop(1, styles.getPropertyValue('--canvas-gradient-end').trim() || '#071018');
       _ctx.fillStyle = g; _ctx.fillRect(0, 0, cw, ch);
       _ctx.font = `${size}px ${_fontFamily}`;
       _ctx.textAlign = 'center'; _ctx.textBaseline = 'alphabetic';
@@ -420,8 +591,8 @@ Make it unforgettable.</textarea>
       const startY = verticalSpace * 0.45 + ascent; // 中央より少し上
       const centerX = cw / 2;
       _ctx.lineWidth = Math.max(2, Math.floor(size * 0.06));
-      _ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-      _ctx.fillStyle = '#ffffff';
+      _ctx.strokeStyle = styles.getPropertyValue('--canvas-text-stroke').trim() || 'rgba(0,0,0,0.6)';
+      _ctx.fillStyle = styles.getPropertyValue('--canvas-text-fill').trim() || '#ffffff';
       for (let i = 0; i < lines.length; i++) {
         const y = startY + i * lineH;
         _ctx.strokeText(lines[i], centerX, y);
@@ -609,6 +780,7 @@ Make it unforgettable.</textarea>
     _btnSave.addEventListener('click', _savePNG);
     _btnHint.addEventListener('click', _toggleHint);
     _btnSpeak.addEventListener('click', _toggleSpeak);
+    _btnTheme?.addEventListener('click', _toggleTheme);
     _input.addEventListener('input', () => {
       _lastText = _input.value;
       if (_mode === 'view') _drawText();
