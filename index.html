@@ -511,8 +511,6 @@ Make it unforgettable.</textarea>
         };
         if (typeof _prefersDarkQuery.addEventListener === 'function') {
           _prefersDarkQuery.addEventListener('change', handlePrefersChange);
-        } else if (typeof _prefersDarkQuery.addListener === 'function') {
-          _prefersDarkQuery.addListener(handlePrefersChange);
         }
       }
     })();
