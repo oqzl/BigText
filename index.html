@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 
 <head>
   <meta charset="utf-8" />
@@ -72,7 +72,15 @@
     .controls {
       display: flex;
       gap: 8px;
-      flex: 1
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .input-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
     }
 
     textarea#input {
@@ -95,6 +103,26 @@
       padding: 8px 10px;
       border-radius: 8px;
       font-size: 14px
+    }
+
+    .secondary-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .secondary-actions button {
+      flex: 0 0 auto;
+    }
+
+    .hint-message {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .hint-message[hidden] {
+      display: none;
     }
 
     .actions {
@@ -125,27 +153,33 @@
       left: 12px;
       bottom: 12px;
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
       z-index: 25;
     }
 
     .hint {
       color: var(--muted);
-      font-size: 13px
+      font-size: 13px;
     }
 
     .speak {
       background: rgba(255, 255, 255, 0.06);
       border-color: rgba(255, 255, 255, 0.12);
       color: #e5e7eb;
-      padding: 10px 12px;
+      padding: 10px 16px;
       border-radius: 9999px;
       font-size: 14px;
       backdrop-filter: blur(4px);
-      display: none;
-      position: static
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .speak.floating {
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
     body.view-mode main {
@@ -169,6 +203,7 @@
 
       .controls {
         width: 100%;
+        flex-direction: column;
       }
 
       .actions {
@@ -176,6 +211,14 @@
       }
 
       .actions button {
+        flex: 1;
+      }
+
+      .secondary-actions {
+        justify-content: stretch;
+      }
+
+      .secondary-actions button {
         flex: 1;
       }
 
@@ -205,12 +248,19 @@
     <h1 class="app-title">BigText</h1>
     <div class="topbar-row">
       <div class="controls">
-        <textarea id="input" placeholder="ここに表示したい文字を入力（改行可）">こんにちは
-二行目です</textarea>
+        <div class="input-stack">
+          <textarea id="input" placeholder="Type something bold. Line breaks are allowed.">Make it bold.
+Make it unforgettable.</textarea>
+          <div class="secondary-actions">
+            <button id="btnHint" type="button" aria-controls="hintMessage" aria-expanded="false">Hint</button>
+            <button id="btnSpeak" class="speak" type="button" title="Speak the text aloud">Speak</button>
+          </div>
+          <div id="hintMessage" class="hint-message" hidden role="status">Switch to View mode to fill the screen. Tap the canvas to edit again.</div>
+        </div>
       </div>
       <div class="actions">
-        <button id="btnView">表示</button>
-        <button id="btnSave">PNG保存</button>
+        <button id="btnView" type="button">View</button>
+        <button id="btnSave" type="button">Save PNG</button>
       </div>
     </div>
   </div>
@@ -218,8 +268,7 @@
     <canvas id="canvas"></canvas>
   </main>
   <div class="bottom-hint">
-    <button id="btnSpeak" class="speak" title="読み上げ">読み上げ</button>
-    <div class="hint">Tap to Edit</div>
+    <div class="hint">Tap the canvas to edit</div>
   </div>
 
   <script>
@@ -230,7 +279,12 @@
     const _btnView = document.getElementById('btnView');
     const _btnSave = document.getElementById('btnSave');
     const _btnSpeak = document.getElementById('btnSpeak');
+    const _btnHint = document.getElementById('btnHint');
     const _topbar = document.querySelector('.topbar');
+    const _secondaryActions = document.querySelector('.secondary-actions');
+    const _hintMessage = document.getElementById('hintMessage');
+    const _bottomHint = document.querySelector('.bottom-hint');
+    const _hintLabel = document.querySelector('.hint');
     const _rootStyle = document.documentElement.style;
     const _mobileQuery = window.matchMedia('(max-width: 640px)');
 
@@ -345,42 +399,91 @@
       }
     }
 
+    function _relocateSpeakButtonToFloating() {
+      if (_btnSpeak.parentElement !== _bottomHint) {
+        _bottomHint.insertBefore(_btnSpeak, _hintLabel);
+      }
+      _btnSpeak.classList.add('floating');
+    }
+
+    function _relocateSpeakButtonToStack() {
+      if (_btnSpeak.parentElement !== _secondaryActions) {
+        _secondaryActions.appendChild(_btnSpeak);
+      }
+      _btnSpeak.classList.remove('floating');
+    }
+
+    function _closeHintMessage() {
+      if (!_hintMessage.hasAttribute('hidden')) {
+        _hintMessage.setAttribute('hidden', '');
+      }
+      _btnHint?.setAttribute('aria-expanded', 'false');
+    }
+
     /* ===== Web Speech API 読み上げ ===== */
     let _voices = [];
-    let _jaVoice = null;
+    let _preferredVoice = null;
     let _speaking = false;
     function _refreshVoices() {
       if (!('speechSynthesis' in window)) return;
       _voices = speechSynthesis.getVoices();
-      _jaVoice = _voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja')) || null;
+      const preferredLangs = [];
+      const navLang = (navigator.language || 'en-US').toLowerCase();
+      preferredLangs.push(navLang);
+      if (!navLang.startsWith('en')) preferredLangs.push('en-US', 'en');
+      preferredLangs.push('ja-JP', 'ja');
+      _preferredVoice = null;
+      for (const lang of preferredLangs) {
+        const match = _voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang));
+        if (match) { _preferredVoice = match; break; }
+      }
     }
     function _textForSpeech() {
       const normalized = (_lastText || '').replace(/\r\n?|\u2028|\u2029/g, '\n');
-      return normalized.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('、');
+      return normalized.split('\n').map(s => s.trim()).filter(s => s.length > 0).join('. ');
     }
     function _speak() {
       if (!('speechSynthesis' in window)) {
-        alert('このブラウザは読み上げに対応していません');
+        alert('Speech synthesis is not supported in this browser.');
         return;
       }
       try {
         speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(_textForSpeech());
-        if (_jaVoice) { u.voice = _jaVoice; u.lang = _jaVoice.lang; }
-        else { u.lang = 'ja-JP'; }
+        if (_speaking) {
+          _speaking = false;
+          _btnSpeak.textContent = 'Speak';
+        }
+        const text = _textForSpeech();
+        if (!text) {
+          alert('Enter some text before using speech synthesis.');
+          return;
+        }
+        const u = new SpeechSynthesisUtterance(text);
+        if (_preferredVoice) { u.voice = _preferredVoice; u.lang = _preferredVoice.lang; }
+        else { u.lang = navigator.language || 'en-US'; }
         u.rate = 1.0; u.pitch = 1.0;
-        u.onstart = () => { _speaking = true; _btnSpeak.textContent = '停止'; };
-        u.onend = () => { _speaking = false; _btnSpeak.textContent = '読み上げ'; };
-        u.onerror = () => { _speaking = false; _btnSpeak.textContent = '読み上げ'; };
+        u.onstart = () => { _speaking = true; _btnSpeak.textContent = 'Stop'; };
+        u.onend = () => { _speaking = false; _btnSpeak.textContent = 'Speak'; };
+        u.onerror = () => { _speaking = false; _btnSpeak.textContent = 'Speak'; };
         speechSynthesis.speak(u);
       } catch (err) {
         console.error('Speech synthesis failed:', err);
-        alert('読み上げが許可されていません（Permissions Policy）。通常のウェブページとして https で開いてください。');
+        alert('Speech synthesis is blocked. Please open this page over HTTPS in a regular browser tab.');
       }
     }
     function _toggleSpeak() {
-      if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = '読み上げ'; }
+      if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = 'Speak'; }
       else { _speak(); }
+    }
+
+    function _toggleHint() {
+      if (_hintMessage.hasAttribute('hidden')) {
+        _hintMessage.removeAttribute('hidden');
+        _btnHint.setAttribute('aria-expanded', 'true');
+      } else {
+        _hintMessage.setAttribute('hidden', '');
+        _btnHint.setAttribute('aria-expanded', 'false');
+      }
     }
 
     /* ====== ファイル名生成（空白・改行→アンダースコア、拡張子は .png）====== */
@@ -422,21 +525,27 @@
       _mode = 'view';
       document.body.classList.add('view-mode');
       _topbar.style.display = 'none';
-      document.querySelector('.hint').style.display = 'block';
+      _hintLabel.style.display = 'block';
+      _btnView.textContent = 'Edit';
       _lastText = _input.value;
       _drawText();
       _canvas.addEventListener('click', _onCanvasClickToEdit);
-      _btnSpeak.style.display = 'inline-flex';
+      _relocateSpeakButtonToFloating();
+      _btnSpeak.textContent = _speaking ? 'Stop' : 'Speak';
+      _closeHintMessage();
       _updateControlOffsets();
     }
     function _enterEdit() {
       _mode = 'edit';
       document.body.classList.remove('view-mode');
       _topbar.style.display = 'flex';
-      document.querySelector('.hint').style.display = 'none';
+      _hintLabel.style.display = 'none';
+      _btnView.textContent = 'View';
       _canvas.removeEventListener('click', _onCanvasClickToEdit);
-      _btnSpeak.style.display = 'none';
-      if (_speaking) { speechSynthesis.cancel(); _speaking = false; _btnSpeak.textContent = '読み上げ'; }
+      _relocateSpeakButtonToStack();
+      if (_speaking) { speechSynthesis.cancel(); _speaking = false; }
+      _btnSpeak.textContent = 'Speak';
+      _closeHintMessage();
       // Clear canvas in edit mode
       _ctx.clearRect(0, 0, _canvas.width / _devicePixelRatio, _canvas.height / _devicePixelRatio);
       requestAnimationFrame(_updateControlOffsets);
@@ -446,6 +555,7 @@
     /* イベント */
     _btnView.addEventListener('click', () => { if (_mode === 'edit') _enterView(); else _enterEdit(); });
     _btnSave.addEventListener('click', _savePNG);
+    _btnHint.addEventListener('click', _toggleHint);
     _btnSpeak.addEventListener('click', _toggleSpeak);
     _input.addEventListener('input', () => {
       _lastText = _input.value;
@@ -519,7 +629,11 @@
       _enterEdit();
       _runSelfTests();
       _refreshVoices();
-      
+      if (!('speechSynthesis' in window)) {
+        _btnSpeak.disabled = true;
+        _btnSpeak.title = 'Speech synthesis is not supported in this browser.';
+      }
+
       // Register service worker for PWA
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
