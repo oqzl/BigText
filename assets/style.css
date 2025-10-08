@@ -34,10 +34,10 @@
   --shadow-strong: rgba(148, 163, 184, 0.45);
   --float-shadow: rgba(148, 163, 184, 0.35);
   --tagline: rgba(30, 41, 59, 0.72);
-  --canvas-gradient-start: #f8fafc;
-  --canvas-gradient-end: #e0f2fe;
+  --canvas-gradient-start: #f3f5fa;
+  --canvas-gradient-end: #f3f5fa;
   --canvas-text-fill: #0f172a;
-  --canvas-text-stroke: rgba(148, 163, 184, 0.6);
+  --canvas-text-stroke: transparent;
   --topbar-gradient-start: rgba(148, 163, 184, 0.16);
   --brand-shadow: rgba(148, 163, 184, 0.4);
 }
@@ -196,11 +196,6 @@ button {
   }
 }
 
-.theme-toggle-fixed:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
 .theme-toggle span {
   line-height: 1;
 }
@@ -260,7 +255,6 @@ canvas {
 
 .action-button:hover {
   background: var(--surface);
-  color: var(--fg);
 }
 
 .action-button:focus-visible {

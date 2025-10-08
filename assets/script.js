@@ -179,18 +179,19 @@ function _drawText() {
     _canvas.width / _devicePixelRatio,
     _canvas.height / _devicePixelRatio,
   );
-  const g = _ctx.createLinearGradient(0, 0, 0, ch);
   const styles = getComputedStyle(document.documentElement);
-  g.addColorStop(
-    0,
-    styles.getPropertyValue("--canvas-gradient-start").trim() ||
-    "#0b0b0b",
-  );
-  g.addColorStop(
-    1,
-    styles.getPropertyValue("--canvas-gradient-end").trim() || "#071018",
-  );
-  _ctx.fillStyle = g;
+  const gradientStart =
+    styles.getPropertyValue("--canvas-gradient-start").trim() || "#0b0b0b";
+  const gradientEnd =
+    styles.getPropertyValue("--canvas-gradient-end").trim() || "#071018";
+  let backgroundFill = gradientStart;
+  if (gradientStart.toLowerCase() !== gradientEnd.toLowerCase()) {
+    const gradient = _ctx.createLinearGradient(0, 0, 0, ch);
+    gradient.addColorStop(0, gradientStart);
+    gradient.addColorStop(1, gradientEnd);
+    backgroundFill = gradient;
+  }
+  _ctx.fillStyle = backgroundFill;
   _ctx.fillRect(0, 0, cw, ch);
   _ctx.font = `${size}px ${_fontFamily}`;
   _ctx.textAlign = "center";
@@ -212,15 +213,24 @@ function _drawText() {
   const verticalSpace = Math.max(0, ch - totalH);
   const startY = verticalSpace * 0.45 + ascent; // 中央より少し上
   const centerX = cw / 2;
-  _ctx.lineWidth = Math.max(2, Math.floor(size * 0.06));
-  _ctx.strokeStyle =
-    styles.getPropertyValue("--canvas-text-stroke").trim() ||
-    "rgba(0,0,0,0.6)";
+  const strokeRaw = styles.getPropertyValue("--canvas-text-stroke").trim();
+  const strokeColor = strokeRaw || "rgba(0,0,0,0.6)";
+  const shouldStroke = strokeRaw
+    ? !/^transparent$/i.test(strokeColor) && !/^none$/i.test(strokeColor)
+    : true;
+  if (shouldStroke) {
+    _ctx.lineWidth = Math.max(2, Math.floor(size * 0.06));
+    _ctx.strokeStyle = strokeColor;
+  } else {
+    _ctx.lineWidth = 0;
+  }
   _ctx.fillStyle =
     styles.getPropertyValue("--canvas-text-fill").trim() || "#ffffff";
   for (let i = 0; i < lines.length; i++) {
     const y = startY + i * lineH;
-    _ctx.strokeText(lines[i], centerX, y);
+    if (shouldStroke) {
+      _ctx.strokeText(lines[i], centerX, y);
+    }
     _ctx.fillText(lines[i], centerX, y);
   }
 }
